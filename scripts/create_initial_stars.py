@@ -4,643 +4,7 @@ import numpy as np
 import shutil
 
 
-def add_inner_outer_choice(in_star, out_star, case='Chlamy'):
-    data_lists = star_utils.read_star_file(in_star)
-    if case in ['Chlamy', 'Chlamy_bin4']:
-        inner_outer = ['_innerOuter',
-                       'outer',  # Tomo_8 M2a
-                       'outer',  # M4a
-                       'inner',  # Tomo_1 M17c
-                       'outer',  # M2
-                       'inner',  # M21b
-                       'inner',  # M25b
-                       'outer',  # M26b
-                       'inner',  # M3b
-                       'inner',  # M3c
-                       'outer',  # M4b
-                       'inner',  # M5c
-                       'inner',  # Tomo21 M12
-                       'outer',  # M13a
-                       'inner',  # M14a
-                       'inner',  # M14b
-                       'outer',  # M15
-                       'inner',  # M18a
-                       'outer',  # M19a
-                       'inner',  # M2
-                       'inner',  # M39
-                       'outer',  # M3a
-                       'outer',  # M40
-                       'inner',  # M41
-                       'outer',  # M42
-                       'inner',  # M4a
-                       'outer',  # M5a
-                       'inner',  # M8
-                       'outer',  # Tomo_9 M3a
-                       'inner',  # M4b
-                       'inner',  # M6a
-                       'outer',  # M7a
-                       ]
-    elif case == 'spinach':
-        inner_outer = ['_innerOuter',
-                       'inner',  # M10
-                       'outer',  # M11
-                       'inner',  # M12
-                       'outer',  # M13
-                       'inner',  # M14
-                       'outer',  # M15
-                       'inner',  # M16
-                       'outer',  # M17
-                       'inner',  # M18
-                       'outer',  # M19
-                       'inner',  # M2
-                       'inner',  # M20
-                       'outer',  # M21
-                       'inner',  # M22
-                       'outer',  # M23
-                       'inner',  #M26
-                       'outer',  #M27
-                       'inner',  #M28
-                       'outer',  #M29
-                       'outer',  #M3
-                       'inner',  #M30
-                       'outer',  #M31
-                       'inner',  #M32
-                       'outer',  #M33
-                       'inner',  #M34
-                       'outer',  #M35
-                       'inner',  #M36
-                       'outer',  #M37
-                       'inner',  #M38
-                       'outer',  #M39
-                       'inner',  #M4
-                       'inner',  #M40
-                       'outer',  # M5
-                       'inner',  # M6
-                       'outer',  # M7
-                       'inner',  # M8
-                       'outer'  # M9
-                       ]
-    elif case == 'spinach_val':
-        inner_outer = ['_innerOuter',
-                       'outer',  # M1
-                       'inner',  # M10
-                       'outer',  # M11
-                       'inner',  # M12
-                       'outer',  # M13
-                       'inner',  # M14
-                       'outer',  # M15
-                       'inner',  # M16
-                       'inner',  # M2
-                       'outer',  # M3
-                       'inner',  # M4
-                       'outer',  # M41
-                       'inner',  # M42
-                       'outer',  # M43
-                       'inner',  # M44
-                       'outer',  # M45
-                       'inner',  # M46
-                       'outer',  # M47
-                       'inner',  # M48
-                       'outer',  # M49
-                       'outer',  # M5
-                       'inner',  # M50
-                       'outer',  # M51
-                       'inner',  # M52
-                       'inner',  # M6
-                       'outer',  # M7
-                       'inner',  # M8
-                       'outer'  # M9
-                       ]
-    elif case == 'new_spinach':
-        inner_outer = ['_innerOuter',
-                       'inner',  # M10, S1 Tomo_0002_2
-                       'outer',  # M11, S1 Tomo_0002_2
-                       'outer',  # M7, S1 Tomo_0002_2
-                       'inner',  # M8, S1 Tomo_0002_2
-                       'outer',  # M9, S1 Tomo_0002_2
-                       'outer',  # M12, S1, Tomo_0001
-                       'outer',  # M14, S1, Tomo_0001
-                       'outer',  # M16, S1, Tomo_0001
-                       'inner',  # M17, S1, Tomo_0001
-                       'inner',  # M19, S1, Tomo_0001
-                       'inner',  # M11, S2, Tomo_0002
-                       'inner',  # M13, S1C2, Tomo_0002
-                       'inner',  # M15, S1C2, Tomo_0002
-                       'outer',  # M20, S2, Tomo_0002
-                       'inner',  # M5, S2, Tomo_0002
-                       'inner',  # M10, S4, Tomo_0010
-                       'inner',  # M12, S2, Tomo_0010
-                       'outer',  # M19, S3, Tomo_0010
-                       'outer',  # M3, S4, Tomo_0010
-                       'inner',  # M4, S1, Tomo_0010
-                       'inner',  # M12, S1, Tomo_0003
-                       'outer',  # M13, S1, Tomo_0003
-                       'inner',  # M14, S1, Tomo_0003
-                       'outer',  # M15, S1, Tomo_0003
-                       'inner',  # M18, S2, Tomo_0003
-                       'inner',  # M38, S3, Tomo_0003
-                       'outer',  # M18L, S4, Tomo_0004
-                       'outer',  # M20L, S4, Tomo_0004
-                       'inner',  # M3, S2, Tomo_0004
-                       'inner',  # M7, S3, Tomo_0004
-                       'outer',  # M8, S1, Tomo_0004
-                       'inner',  # M2, S1C3, Tomo_0017
-                       'inner',  # M2, S3, Tomo_0017
-                       'outer',  # M3, S1C3, Tomo_0017
-                       'inner',  # M4, S1C3, Tomo_0017
-                       'outer',  # M5, S1C3, Tomo_0017
-                       'inner',  # M14, S1, Tomo_0032
-                       'outer',  # M19, S1, Tomo_0032
-                       'outer',  # M21, S1C3, Tomo_0032
-                       'outer',  # M3, S3, Tomo_0032
-                       'inner',  # M4, S1C1, Tomo_0032
-                       'outer',  # M7, S2, Tomo_0032
-                       'outer',  # M15, S4, Tomo_0038
-                       'inner',  # M2, S1, Tomo_0038
-                       'inner',  # M2, S6, Tomo_0038
-                       'inner',  # M4, S2, Tomo_0038
-                       'outer',  # M5, S5, Tomo_0038
-                       ]
-    elif case == 'new_spinach_all':
-        inner_outer = ['_innerOuter',
-                       'outer',  # M1, S1 Tomo_0002_2
-                       'inner',  # M10, S1 Tomo_0002_2
-                       'outer',  # M11, S1 Tomo_0002_2
-                       'inner',  # M12, S1 Tomo_0002_2
-                       'outer',  # M13, S1 Tomo_0002_2
-                       'inner',  # M14, S1 Tomo_0002_2
-                       'outer',  # M15, S1 Tomo_0002_2
-                       'inner',  # M16, S1 Tomo_0002_2
-                       'outer',  # M17, S1 Tomo_0002_2
-                       'inner',  # M18, S1 Tomo_0002_2
-                       'outer',  # M18, S1 Tomo_0002_2
-                       'inner',  # M2, S1 Tomo_0002_2
-                       'inner',  # M20, S1 Tomo_0002_2
-                       'outer',  # M21, S1 Tomo_0002_2
-                       'inner',  # M22, S1 Tomo_0002_2
-                       'outer',  # M23, S1 Tomo_0002_2
-                       'inner',  # M24, S1 Tomo_0002_2
-                       'outer',  # M25, S1 Tomo_0002_2
-                       'inner',  # M26, S1 Tomo_0002_2
-                       'outer',  # M27, S1 Tomo_0002_2
-                       'inner',  # M28, S1 Tomo_0002_2
-                       'outer',  # M29, S1 Tomo_0002_2
-                       'outer',  # M3, S1 Tomo_0002_2
-                       'inner',  # M30, S1 Tomo_0002_2
-                       'outer',  # M31, S1 Tomo_0002_2
-                       'inner',  # M32, S1 Tomo_0002_2
-                       'outer',  # M33, S1 Tomo_0002_2
-                       'inner',  # M34, S1 Tomo_0002_2
-                       'outer',  # M35, S1 Tomo_0002_2
-                       'inner',  # M36, S1 Tomo_0002_2
-                       'outer',  # M37, S1 Tomo_0002_2
-                       'inner',  # M38, S1 Tomo_0002_2
-                       'outer',  # M39, S1 Tomo_0002_2
-                       'inner',  # M4, S1 Tomo_0002_2
-                       'inner',  # M40, S1 Tomo_0002_2
-                       'outer',  # M41, S1 Tomo_0002_2
-                       'inner',  # M42, S1 Tomo_0002_2
-                       'outer',  # M5, S1 Tomo_0002_2
-                       'inner',  # M6, S1 Tomo_0002_2
-                       'outer',  # M7, S1 Tomo_0002_2
-                       'inner',  # M8, S1 Tomo_0002_2
-                       'outer',  # M9, S1 Tomo_0002_2
 
-                       'inner',  # M1, S1 Tomo_0001
-                       'inner',  # M1, S2 Tomo_0001
-                       'outer',  # M10, S1 Tomo_0001
-                       'outer',  # M10, S2 Tomo_0001
-                       'inner',  # M11, S1 Tomo_0001
-                       'inner',  # M11, S2 Tomo_0001
-                       'outer',  # M12, S1 Tomo_0001
-                       'outer',  # M12, S2 Tomo_0001
-                       'inner',  # M13, S1 Tomo_0001
-                       'inner',  # M13, S2 Tomo_0001
-                       'outer',  # M14, S1 Tomo_0001
-                       'outer',  # M14, S2 Tomo_0001
-                       'inner',  # M15, S1 Tomo_0001
-                       'inner',  # M15, S2 Tomo_0001
-                       'outer',  # M16, S1 Tomo_0001
-                       'outer',  # M16, S2 Tomo_0001
-                       'inner',  # M17, S1 Tomo_0001
-                       'inner',  # M17, S2 Tomo_0001
-                       'outer',  # M18, S1 Tomo_0001
-                       'outer',  # M18, S2 Tomo_0001
-                       'inner',  # M19, S1 Tomo_0001
-                       'inner',  # M19, S2 Tomo_0001
-                       'outer',  # M2, S1 Tomo_0001
-                       'outer',  # M2, S2 Tomo_0001
-                       'outer',  # M20, S1 Tomo_0001
-                       'outer',  # M20, S2 Tomo_0001
-                       'inner',  # M21, S1 Tomo_0001
-                       'outer',  # M22, S1 Tomo_0001
-                       'inner',  # M23, S1 Tomo_0001
-                       'outer',  # M24, S1 Tomo_0001
-                       'inner',  # M3, S1 Tomo_0001
-                       'inner',  # M3, S2 Tomo_0001
-                       'outer',  # M4, S1 Tomo_0001
-                       'outer',  # M4, S2 Tomo_0001
-                       'inner',  # M5, S1 Tomo_0001
-                       'inner',  # M5, S2 Tomo_0001
-                       'outer',  # M6, S1 Tomo_0001
-                       'outer',  # M6, S2 Tomo_0001
-                       'inner',  # M7, S1 Tomo_0001
-                       'inner',  # M7, S2 Tomo_0001
-                       'outer',  # M8, S1 Tomo_0001
-                       'outer',  # M8, S2 Tomo_0001
-                       'inner',  # M9, S1 Tomo_0001
-                       'inner',  # M9, S2 Tomo_0001
-
-                       'inner',  # M1, S2 Tomo_0002
-                       'outer',  # M10, S2 Tomo_0002
-                       'inner',  # M11, S2 Tomo_0002
-                       'outer',  # M12, S1C2 Tomo_0002
-                       'outer',  # M12, S2 Tomo_0002
-                       'inner',  # M13, S1C2 Tomo_0002
-                       'inner',  # M13, S2 Tomo_0002
-                       'outer',  # M14, S1C2 Tomo_0002
-                       'outer',  # M14, S2 Tomo_0002
-                       'inner',  # M15, S1C2 Tomo_0002
-                       'inner',  # M15, S2 Tomo_0002
-                       'outer',  # M16, S1C2 Tomo_0002
-                       'outer',  # M16, S2 Tomo_0002
-                       'inner',  # M17, S1C2 Tomo_0002
-                       'inner',  # M17, S2 Tomo_0002
-                       'outer',  # M18, S2 Tomo_0002
-                       'inner',  # M19, S2 Tomo_0002
-                       'outer',  # M2, S2 Tomo_0002
-                       'outer',  # M20, S2 Tomo_0002
-                       'inner',  # M21, S2 Tomo_0002
-                       'outer',  # M22, S2 Tomo_0002
-                       'inner',  # M3, S2 Tomo_0002
-                       'outer',  # M4, S2 Tomo_0002
-                       'inner',  # M5, S2 Tomo_0002
-                       'outer',  # M6, S2 Tomo_0002
-                       'inner',  # M7, S2 Tomo_0002
-                       'outer',  # M8, S2 Tomo_0002
-                       'inner',  # M9, S2 Tomo_0002
-
-                       'outer',  # M1, S1 Tomo_0010
-                       'outer',  # M1, S4 Tomo_0010
-                       'inner',  # M10, S2 Tomo_0010
-                       'inner',  # M10, S4 Tomo_0010
-                       'outer',  # M11, S2 Tomo_0010
-                       'outer',  # M11, S4 Tomo_0010
-                       'inner',  # M12, S2 Tomo_0010
-                       'inner',  # M12, S4 Tomo_0010
-                       'outer',  # M13, S2 Tomo_0010
-                       'outer',  # M13, S4 Tomo_0010
-                       'outer',  # M13L, S2 Tomo_0010
-                       'inner',  # M14, S2 Tomo_0010
-                       'inner',  # M14, S4 Tomo_0010
-                       'inner',  # M14L, S4 Tomo_0010
-                       'outer',  # M15, S2 Tomo_0010
-                       'inner',  # M16, S2 Tomo_0010
-                       'outer',  # M17, S2 Tomo_0010
-                       'inner',  # M18, S3 Tomo_0010
-                       'outer',  # M19, S3 Tomo_0010
-                       'outer',  # M1L, S1 Tomo_0010
-                       'inner',  # M2, S1 Tomo_0010
-                       'inner',  # M2, S4 Tomo_0010
-                       'inner',  # M20, S3 Tomo_0010
-                       'outer',  # M21, S3 Tomo_0010
-                       'inner',  # M22, S3 Tomo_0010
-                       'outer',  # M23, S3 Tomo_0010
-                       'inner',  # M24, S3 Tomo_0010
-                       'outer',  # M25, S3 Tomo_0010
-                       'outer',  # M3, S1 Tomo_0010
-                       'outer',  # M3, S4 Tomo_0010
-                       'inner',  # M4, S1 Tomo_0010
-                       'inner',  # M4, S4 Tomo_0010
-                       'outer',  # M5, S1 Tomo_0010
-                       'outer',  # M5, S4 Tomo_0010
-                       'inner',  # M6, S1 Tomo_0010
-                       'inner',  # M6, S4 Tomo_0010
-                       'outer',  # M7, S1 Tomo_0010
-                       'outer',  # M7, S4 Tomo_0010
-                       'inner',  # M8, S1 Tomo_0010
-                       'inner',  # M8, S4 Tomo_0010
-                       'outer',  # M9, S1 Tomo_0010
-                       'outer',  # M9, S4 Tomo_0010
-
-                       'outer',  # M1, S1 Tomo_0003
-                       'inner',  # M10, S1 Tomo_0003
-                       'outer',  # M11, S1 Tomo_0003
-                       'inner',  # M12, S1 Tomo_0003
-                       'outer',  # M13, S1 Tomo_0003
-                       'inner',  # M14, S1 Tomo_0003
-                       'outer',  # M15, S1 Tomo_0003
-                       'outer',  # M15, S2 Tomo_0003
-                       'inner',  # M16, S1 Tomo_0003
-                       'inner',  # M16, S2 Tomo_0003
-                       'outer',  # M17, S2 Tomo_0003
-                       'inner',  # M18, S2 Tomo_0003
-                       'outer',  # M19, S2 Tomo_0003
-                       'inner',  # M2, S1 Tomo_0003
-                       'inner',  # M20, S2 Tomo_0003
-                       'outer',  # M21, S2 Tomo_0003
-                       'inner',  # M22, S2 Tomo_0003
-                       'outer',  # M23, S2 Tomo_0003
-                       'inner',  # M24, S2 Tomo_0003
-                       'outer',  # M25, S2 Tomo_0003
-                       'inner',  # M26, S2 Tomo_0003
-                       'outer',  # M27, S2 Tomo_0003
-                       'inner',  # M28, S2 Tomo_0003
-                       'outer',  # M29, S2 Tomo_0003
-                       'outer',  # M3, S1 Tomo_0003
-                       'inner',  # M30, S2 Tomo_0003
-                       'inner',  # M30, S3 Tomo_0003
-                       'outer',  # M31, S2 Tomo_0003
-                       'outer',  # M31, S3 Tomo_0003
-                       'inner',  # M32, S2 Tomo_0003
-                       'inner',  # M32, S3 Tomo_0003
-                       'outer',  # M33, S3 Tomo_0003
-                       'inner',  # M34, S3 Tomo_0003
-                       'outer',  # M35, S3 Tomo_0003
-                       'inner',  # M36, S3 Tomo_0003
-                       'outer',  # M37, S3 Tomo_0003
-                       'inner',  # M38, S3 Tomo_0003
-                       'outer',  # M39, S3 Tomo_0003
-                       'outer',  # M39, S4 Tomo_0003
-                       'inner',  # M4, S1 Tomo_0003
-                       'inner',  # M40, S3 Tomo_0003
-                       'inner',  # M40, S4 Tomo_0003
-                       'outer',  # M41, S3 Tomo_0003
-                       'outer',  # M41, S4 Tomo_0003
-                       'inner',  # M42, S3 Tomo_0003
-                       'inner',  # M42, S4 Tomo_0003
-                       'outer',  # M43, S4 Tomo_0003
-                       'inner',  # M44, S4 Tomo_0003
-                       'outer',  # M45, S4 Tomo_0003
-                       'inner',  # M46, S4 Tomo_0003
-                       'outer',  # M47, S4 Tomo_0003
-                       'inner',  # M48, S4 Tomo_0003
-                       'outer',  # M49, S4 Tomo_0003
-                       'outer',  # M5, S1 Tomo_0003
-                       'inner',  # M50, S4 Tomo_0003
-                       'outer',  # M51, S4 Tomo_0003
-                       'inner',  # M52, S4 Tomo_0003
-                       'outer',  # M53, S4 Tomo_0003
-                       'inner',  # M54, S4 Tomo_0003
-                       'inner',  # M6, S1 Tomo_0003
-                       'outer',  # M7, S1 Tomo_0003
-                       'inner',  # M8, S1 Tomo_0003
-                       'outer',  # M9, S1 Tomo_0003
-
-                       'inner',  # M1, S1 Tomo_0004
-                       'inner',  # M1, S2 Tomo_0004
-                       'outer',  # M10, S1 Tomo_0004
-                       'outer',  # M10, S3 Tomo_0004
-                       'inner',  # M11, S1 Tomo_0004
-                       'inner',  # M11, S3 Tomo_0004
-                       'outer',  # M12, S1 Tomo_0004
-                       'inner',  # M13, S1 Tomo_0004
-                       'outer',  # M14, S1 Tomo_0004
-                       'inner',  # M15, S1 Tomo_0004
-                       'inner',  # M15, S1 Tomo_0004
-                       'outer',  # M16, S1 Tomo_0004
-                       'outer',  # M16, S3 Tomo_0004
-                       'inner',  # M17, S1 Tomo_0004
-                       'inner',  # M17, S4 Tomo_0004
-                       'outer',  # M18, S1 Tomo_0004
-                       'outer',  # M18, S3 Tomo_0004
-                       'inner',  # M19, S1 Tomo_0004
-                       'inner',  # M19, S4 Tomo_0004
-                       'inner',  # M19L, S1 Tomo_0004
-                       'outer',  # M2, S1 Tomo_0004
-                       'outer',  # M2, S2 Tomo_0004
-                       'outer',  # M20, S1 Tomo_0004
-                       'outer',  # M20, S4 Tomo_0004
-                       'outer',  # M20L, S1 Tomo_0004
-                       'inner',  # M21, S1 Tomo_0004
-                       'inner',  # M21, S4 Tomo_0004
-                       'outer',  # M22, S1 Tomo_0004
-                       'outer',  # M22, S4 Tomo_0004
-                       'inner',  # M3, S1 Tomo_0004
-                       'inner',  # M3, S2 Tomo_0004
-                       'outer',  # M4, S1 Tomo_0004
-                       'outer',  # M4, S2 Tomo_0004
-                       'inner',  # M5, S1 Tomo_0004
-                       'inner',  # M5, S2 Tomo_0004
-                       'outer',  # M6, S1 Tomo_0004
-                       'outer',  # M6, S3 Tomo_0004
-                       'inner',  # M7, S1 Tomo_0004
-                       'inner',  # M7, S3 Tomo_0004
-                       'outer',  # M8, S1 Tomo_0004
-                       'outer',  # M8, S3 Tomo_0004
-                       'inner',  # M9, S1 Tomo_0004
-                       'inner',  # M9, S3 Tomo_0004
-
-                       'outer',  # M1, S1C1 Tomo_0017
-                       'outer',  # M1, S1C3 Tomo_0017
-                       'outer',  # M1, S2C2 Tomo_0017
-                       'outer',  # M1, S3 Tomo_0017
-                       'inner',  # M10, S1C1 Tomo_0017
-                       'inner',  # M10, S1C3 Tomo_0017
-                       'inner',  # M10, S2C2 Tomo_0017
-                       'inner',  # M10, S3 Tomo_0017
-                       'outer',  # M11, S1C1 Tomo_0017
-                       'outer',  # M11, S1C3 Tomo_0017
-                       'outer',  # M11, S2C2 Tomo_0017
-                       'inner',  # M12, S1C1 Tomo_0017
-                       'inner',  # M12, S1C3 Tomo_0017
-                       'inner',  # M12, S2C2 Tomo_0017
-                       'outer',  # M13, S1C1 Tomo_0017
-                       'outer',  # M13, S1C3 Tomo_0017
-                       'outer',  # M13, S2C2 Tomo_0017
-                       'inner',  # M14, S1C1 Tomo_0017
-                       'inner',  # M14, S1C3 Tomo_0017
-                       'inner',  # M14, S2C2 Tomo_0017
-                       'outer',  # M15, S1C1 Tomo_0017
-                       'outer',  # M15, S1C2 Tomo_0017
-                       'outer',  # M15, S2C2 Tomo_0017
-                       'inner',  # M16, S1C1 Tomo_0017
-                       'inner',  # M16, S1C2 Tomo_0017
-                       'inner',  # M16, S2C2 Tomo_0017
-                       'outer',  # M17, S1C1 Tomo_0017
-                       'outer',  # M17, S1C2 Tomo_0017
-                       'outer',  # M17, S2C2 Tomo_0017
-                       'inner',  # M18, S1C1 Tomo_0017
-                       'inner',  # M18, S1C2 Tomo_0017
-                       'inner',  # M18, S2C2 Tomo_0017
-                       'outer',  # M19, S1C1 Tomo_0017
-                       'outer',  # M19, S1C2 Tomo_0017
-                       'inner',  # M2, S1C1 Tomo_0017
-                       'inner',  # M2, S1C3 Tomo_0017
-                       'inner',  # M2, S2C2 Tomo_0017
-                       'inner',  # M2, S3 Tomo_0017
-                       'inner',  # M20, S1C1 Tomo_0017
-                       'inner',  # M20, S1C2 Tomo_0017
-                       'outer',  # M21, S1C1 Tomo_0017
-                       'outer',  # M21, S1C2 Tomo_0017
-                       'inner',  # M22, S1C1 Tomo_0017
-                       'inner',  # M22, S1C2 Tomo_0017
-                       'outer',  # M23, S1C1 Tomo_0017
-                       'outer',  # M23, S1C2 Tomo_0017
-                       'inner',  # M24, S1C1 Tomo_0017
-                       'inner',  # M24, S1C2 Tomo_0017
-                       'outer',  # M3, S1C1 Tomo_0017
-                       'outer',  # M3, S1C3 Tomo_0017
-                       'outer',  # M3, S2C2 Tomo_0017
-                       'outer',  # M3, S3 Tomo_0017
-                       'inner',  # M4, S1C1 Tomo_0017
-                       'inner',  # M4, S1C3 Tomo_0017
-                       'inner',  # M4, S2C2 Tomo_0017
-                       'inner',  # M4, S3 Tomo_0017
-                       'outer',  # M5, S1C1 Tomo_0017
-                       'outer',  # M5, S1C3 Tomo_0017
-                       'outer',  # M5, S2C2 Tomo_0017
-                       'outer',  # M5, S3 Tomo_0017
-                       'inner',  # M6, S1C1 Tomo_0017
-                       'inner',  # M6, S1C3 Tomo_0017
-                       'inner',  # M6, S2C2 Tomo_0017
-                       'inner',  # M6, S3 Tomo_0017
-                       'outer',  # M7, S1C1 Tomo_0017
-                       'outer',  # M7, S1C3 Tomo_0017
-                       'outer',  # M7, S2C2 Tomo_0017
-                       'outer',  # M7, S3 Tomo_0017
-                       'inner',  # M8, S1C1 Tomo_0017
-                       'inner',  # M8, S1C3 Tomo_0017
-                       'inner',  # M8, S2C2 Tomo_0017
-                       'inner',  # M8, S3 Tomo_0017
-                       'outer',  # M9, S1C1 Tomo_0017
-                       'outer',  # M9, S1C3 Tomo_0017
-                       'outer',  # M9, S2C2 Tomo_0017
-                       'outer',  # M9, S3 Tomo_0017
-
-                       'outer',  # M1, S1C1 Tomo_0032
-                       'outer',  # M1, S1C2 Tomo_0032
-                       'outer',  # M1, S2 Tomo_0032
-                       'outer',  # M1, S3 Tomo_0032
-                       'inner',  # M10, S1C2 Tomo_0032
-                       'inner',  # M10, S2 Tomo_0032
-                       'inner',  # M10, S3 Tomo_0032
-                       'outer',  # M11, S1C2 Tomo_0032
-                       'outer',  # M11, S3 Tomo_0032
-                       'inner',  # M12, S1C2 Tomo_0032
-                       'inner',  # M12, S3 Tomo_0032
-                       'outer',  # M13, S1C2 Tomo_0032
-                       'outer',  # M13, S1C3 Tomo_0032
-                       'inner',  # M14, S1C2 Tomo_0032
-                       'inner',  # M14, S1C3 Tomo_0032
-                       'outer',  # M15, S1C2 Tomo_0032
-                       'outer',  # M15, S1C3 Tomo_0032
-                       'inner',  # M16, S1C2 Tomo_0032
-                       'inner',  # M16, S1C3 Tomo_0032
-                       'outer',  # M17, S1C2 Tomo_0032
-                       'outer',  # M17, S1C3 Tomo_0032
-                       'inner',  # M18, S1C2 Tomo_0032
-                       'inner',  # M18, S1C3 Tomo_0032
-                       'outer',  # M19, S1C2 Tomo_0032
-                       'outer',  # M19, S1C3 Tomo_0032
-                       'inner',  # M2, S1C1 Tomo_0032
-                       'inner',  # M2, S1C2 Tomo_0032
-                       'inner',  # M2, S2 Tomo_0032
-                       'inner',  # M2, S3 Tomo_0032
-                       'inner',  # M20, S1C2 Tomo_0032
-                       'inner',  # M20, S1C3 Tomo_0032
-                       'outer',  # M21, S1C2 Tomo_0032
-                       'outer',  # M21, S1C3 Tomo_0032
-                       'outer',  # M3, S1C1 Tomo_0032
-                       'outer',  # M3, S1C2 Tomo_0032
-                       'outer',  # M3, S2 Tomo_0032
-                       'outer',  # M3, S3 Tomo_0032
-                       'inner',  # M4, S1C1 Tomo_0032
-                       'inner',  # M4, S1C2 Tomo_0032
-                       'inner',  # M4, S2 Tomo_0032
-                       'inner',  # M4, S3 Tomo_0032
-                       'outer',  # M5, S1C1 Tomo_0032
-                       'outer',  # M5, S1C2 Tomo_0032
-                       'outer',  # M5, S2 Tomo_0032
-                       'outer',  # M5, S3 Tomo_0032
-                       'inner',  # M6, S1C1 Tomo_0032
-                       'inner',  # M6, S1C2 Tomo_0032
-                       'inner',  # M6, S2 Tomo_0032
-                       'inner',  # M6, S3 Tomo_0032
-                       'outer',  # M7, S1C2 Tomo_0032
-                       'outer',  # M7, S2 Tomo_0032
-                       'outer',  # M7, S3 Tomo_0032
-                       'inner',  # M8, S1C2 Tomo_0032
-                       'inner',  # M8, S2 Tomo_0032
-                       'inner',  # M8, S3 Tomo_0032
-                       'outer',  # M9, S1C2 Tomo_0032
-                       'outer',  # M9, S2 Tomo_0032
-                       'outer',  # M9, S3 Tomo_0032
-
-                       'outer',  # M1, S1 Tomo_0038
-                       'outer',  # M1, S2 Tomo_0038
-                       'outer',  # M1, S5 Tomo_0038
-                       'outer',  # M1, S6 Tomo_0038
-                       'inner',  # M10, S6 Tomo_0038
-                       'outer',  # M11, S6 Tomo_0038
-                       'inner',  # M12, S6 Tomo_0038
-                       'outer',  # M13, S6 Tomo_0038
-                       'inner',  # M14, S6 Tomo_0038
-                       'outer',  # M15, S4 Tomo_0038
-                       'outer',  # M15, S6 Tomo_0038
-                       'inner',  # M16, S6 Tomo_0038
-                       'inner',  # M16, S6 Tomo_0038
-                       'outer',  # M17, S4 Tomo_0038
-                       'outer',  # M17, S6 Tomo_0038
-                       'inner',  # M18, S4 Tomo_0038
-                       'outer',  # M19, S4 Tomo_0038
-                       'inner',  # M2, S1 Tomo_0038
-                       'inner',  # M2, S2 Tomo_0038
-                       'inner',  # M2, S5 Tomo_0038
-                       'inner',  # M2, S6 Tomo_0038
-                       'inner',  # M20, S4 Tomo_0038
-                       'outer',  # M21, S4 Tomo_0038
-                       'inner',  # M22, S4 Tomo_0038
-                       'outer',  # M23, S4 Tomo_0038
-                       'inner',  # M24, S4 Tomo_0038
-                       'outer',  # M25, S4 Tomo_0038
-                       'inner',  # M26, S4 Tomo_0038
-                       'outer',  # M27, S4 Tomo_0038
-                       'inner',  # M28, S4 Tomo_0038
-                       'outer',  # M29, S4 Tomo_0038
-                       'outer',  # M3, S1 Tomo_0038
-                       'outer',  # M3, S2 Tomo_0038
-                       'outer',  # M3, S5 Tomo_0038
-                       'outer',  # M3, S6 Tomo_0038
-                       'inner',  # M30, S4 Tomo_0038
-                       'outer',  # M31, S4 Tomo_0038
-                       'inner',  # M32, S4 Tomo_0038
-                       'inner',  # M4, S1 Tomo_0038
-                       'inner',  # M4, S2 Tomo_0038
-                       'inner',  # M4, S5 Tomo_0038
-                       'inner',  # M4, S6 Tomo_0038
-                       'outer',  # M5, S1 Tomo_0038
-                       'outer',  # M5, S2 Tomo_0038
-                       'outer',  # M5, S5 Tomo_0038
-                       'outer',  # M5, S6 Tomo_0038
-                       'inner',  # M6, S1 Tomo_0038
-                       'inner',  # M6, S2 Tomo_0038
-                       'inner',  # M6, S5 Tomo_0038
-                       'inner',  # M6, S6 Tomo_0038
-                       'outer',  # M7, S1 Tomo_0038
-                       'outer',  # M7, S2 Tomo_0038
-                       'outer',  # M7, S5 Tomo_0038
-                       'outer',  # M7, S6 Tomo_0038
-                       'inner',  # M8, S1 Tomo_0038
-                       'inner',  # M8, S2 Tomo_0038
-                       'inner',  # M8, S5 Tomo_0038
-                       'inner',  # M8, S6 Tomo_0038
-                       'outer'   # M9, S6 Tomo_0038
-
-
-                       ]
-    elif case == 'matthias':
-        inner_outer = ['_innerOuter',
-                       'inner',
-                       'outer',
-                       'inner',
-                       'outer',
-                       'outer'
-
-                       ]
-
-    data_lists.append(inner_outer)
-    star_utils.write_star_file(out_star, data_lists)
 
 
 
@@ -665,10 +29,23 @@ def check_denoised(dir, tomo_tokens, binning):
     return not any([not flag for flag in flags])
 
 
-def get_tomo_path(in_dir, tomo_token, binning, dimi, denoised=False):
+def get_tomo_path(in_dir, tomo_token, dimi, binning, denoised=False):
     tomo_dir = os.path.join(in_dir, tomo_token)
     for file in os.listdir(tomo_dir):
-        if not os.path.isdir(os.path.join(tomo_dir, file)) and ('bin' + str(binning)) in file:
+        if not os.path.isdir(os.path.join(tomo_dir, file)) and 'bin' + str(binning) in file:
+            if dimi:
+                if not '_dimi_' in file:
+                    continue
+            elif denoised:
+                if not '_denoised' in file:
+                    continue
+            else:
+                if '_dimi_' in file or '_denoised_' in file:
+                    continue
+            return os.path.join(tomo_dir, file)
+    denoised = True
+    for file in os.listdir(tomo_dir):
+        if not os.path.isdir(os.path.join(tomo_dir, file)) and 'bin' + str(binning) in file:
             if dimi:
                 if not '_dimi_' in file:
                     continue
@@ -697,6 +74,9 @@ def create_gt_dir(tomo_token, gt_out_dir, pos_dir):
 
 def create_initial_stars(in_dir, out_star, gt_out_dir, binning=2, with_dimi=True, with_denoised=True,
                          add_bin4_paths=True, pixel_spacing_bin1=3.42, unbinned_offset_Z=None, training=False):
+    print("")
+    print("Creating initial star files.")
+    print("")
     tomo_tokens = []
     for folder in os.listdir(in_dir):
         if os.path.isdir(os.path.join(in_dir, folder)):
@@ -712,7 +92,7 @@ def create_initial_stars(in_dir, out_star, gt_out_dir, binning=2, with_dimi=True
         'mbToken': [],
         'segPath': [],
         'tomoBin': [],
-        'tomoBin4Path': [],
+        # 'tomoBin4Path': [],
         'gtPath': [],
         'pixelSpacing': [],
         'stackToken': []
@@ -737,10 +117,9 @@ def create_initial_stars(in_dir, out_star, gt_out_dir, binning=2, with_dimi=True
                 create_gt_dir(tomo_token, gt_out_dir, pos_folder)
                 pos_flag = True
         # tomo_dir += '/all_no_positions/'
-        for file in os.listdir(tomo_dir):
-            if os.path.isdir(os.path.join(tomo_dir, file)) and 'membranes' in file:
-                mb_folder = os.path.join(tomo_dir, file)
-                seg_flag = True
+        mb_folder = os.path.join(tomo_dir, 'membranes')
+        if os.path.isdir(mb_folder):
+            seg_flag = True
         if not pos_flag:
             print("WARNING: Folder for tomogram " + tomo_token + " does not contain positions folder. Only use for inference!")
         assert seg_flag, 'folder for tomogram ' + tomo_token + ' does not contain membranes folder'
@@ -766,36 +145,33 @@ def create_initial_stars(in_dir, out_star, gt_out_dir, binning=2, with_dimi=True
             # for mb in remove_list:
             #     seg_mbs.remove(mb)
             remove_list = []
+
             for mb in pos_mbs:
                 if mb not in seg_mbs:
                     remove_list.append(mb)
             for mb in remove_list:
                 pos_mbs.remove(mb)
             assert len(pos_mbs) <= len(seg_mbs), 'Labels and membranes are not consistent!'
-
         mb_tokens[tomo_token] = seg_mbs
 
 
     for tomo_token in tomo_tokens:
-        tomo_path = get_tomo_path(in_dir, tomo_token, binning, dimi=False)
-        tomo_path_bin4 = get_tomo_path(in_dir, tomo_token, binning=4, dimi=False, denoised=True)
-        print(tomo_path, "<-------")
+        tomo_path = get_tomo_path(in_dir, tomo_token, dimi=False, binning=binning)
+        # tomo_path_bin4 = get_tomo_path(in_dir, tomo_token, binning=4, dimi=False, denoised=True)
         if with_dimi:
-            tomo_path_dimi = get_tomo_path(in_dir, tomo_token, binning, dimi=True)
+            tomo_path_dimi = get_tomo_path(in_dir, tomo_token, dimi=True, binning=binning)
         if with_denoised:
-            tomo_path_denoised = get_tomo_path(in_dir, tomo_token, binning, dimi=False, denoised=True)
+            tomo_path_denoised = get_tomo_path(in_dir, tomo_token, dimi=False, binning=binning, denoised=True)
         tomo_dir = os.path.join(in_dir, tomo_token)
         # tomo_dir += '/all_no_positions/'
-        for file in os.listdir(tomo_dir):
-            if os.path.isdir(os.path.join(tomo_dir, file)) and 'membranes' in file:
-                mb_folder = os.path.join(tomo_dir, file)
+        mb_folder = os.path.join(tomo_dir, 'membranes')
 
         for mb_token in mb_tokens[tomo_token]:
             star_dict['tomoToken'].append(tomo_token)
             star_dict['mbToken'].append(mb_token[0])
             star_dict['tomoPath'].append(tomo_path)
             star_dict['tomoBin'].append(str(binning))
-            star_dict['tomoBin4Path'].append(tomo_path_bin4)
+            # star_dict['tomoBin4Path'].append(tomo_path_bin4)
             if with_dimi:
                 star_dict['tomoPathDimi'].append(tomo_path_dimi)
             if with_denoised:

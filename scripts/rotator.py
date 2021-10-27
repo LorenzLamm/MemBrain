@@ -299,7 +299,7 @@ class Rotator(object):
             return np.zeros(all_lines.shape[0])
         else:
             out_mask = np.zeros(all_lines.shape[0])
-            step = all_lines.shape[0] / self.n_pr
+            step = int(all_lines.shape[0] / self.n_pr)
             for i in range(self.n_pr - 1):
                 out_mask[i*step:(i+1)*step] = i
             out_mask[(i+1) * step:] = self.n_pr - 1

@@ -7,7 +7,7 @@ from typing import Optional
 from scripts.add_labels_and_distances import load_hdf5_files
 
 
-def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_tokens=None, random_ratio=(80,20,0)):
+def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_tokens=None, random_ratio=(60,20,20)):
     """
     Adds a datasplit column to the star file, indicating which set the current membrane belongs to
     @param train_tokens: dictionary with tomo_tokens as keys. Values are pairs of stack-mb_token. If not specified, will
@@ -39,14 +39,14 @@ def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_to
                 assert idx is not None, 'Could not find corresponding Tomo - Stack - MB combination: ' + tomo_token +\
                                         ' ' + stack_token + ' ' + mb_token
                 split_array[idx] = 'test'
-    val_flag = False
+    val_flag = val_tokens is not None
     if val_tokens is None and tomo_tokens.shape[0] >= 100. / (random_ratio[1] + 1e-10):
         val_flag = True
         num_tomos_val = np.floor(random_ratio[1] / 100 * tomo_tokens.shape[0])
         tomo_choice_val = np.random.choice(tomo_tokens, num_tomos_val, replace=False)
         split_array[np.isin(tomo_tokens, tomo_choice_val)] = 'val'
 
-    test_flag = False
+    test_flag = test_tokens is not None
     if test_tokens is None and tomo_tokens.shape[0] >= 100. / (random_ratio[2] + 1e-10):
         test_flag = True
         num_tomos_test = np.floor(random_ratio[2] / 100 * tomo_tokens.shape[0])
@@ -58,14 +58,14 @@ def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_to
         num_vals = int(np.floor(random_ratio[1] / 100 * split_array.shape[0]))
         if num_vals > 0:
             val_idcs = np.random.choice(remaining_idcs, num_vals, replace=False)
-            split_array[tuple(val_idcs)] = 'val'
+            split_array[val_idcs] = 'val'
 
     remaining_idcs = np.array(np.argwhere(split_array == 'no_choice')).squeeze()
     if not test_flag:
         num_tests = int(np.floor(random_ratio[2] / 100 * split_array.shape[0]))
         if num_tests > 0:
             test_idcs = np.random.choice(remaining_idcs, num_tests, replace=False)
-            split_array[tuple(test_idcs)] = 'test'
+            split_array[test_idcs] = 'test'
 
     split_array[split_array == 'no_choice'] = 'train'
 
@@ -108,6 +108,27 @@ class MemBrain_dataset(Dataset):
         self.__load_h5_data()
         if self.subvolumes is not None and normalize:
             self.subvolumes = self.__scale_subvolumes()
+        self.__print__()
+
+    def __print__(self):
+        token = ('TRAINING' if self.split == 'train' else 'VALIDATION' if self.split == 'val' else 'TEST')
+        print("")
+        print("For the " + token + " set, the following combinations were used:")
+        print("")
+        unique_tomos = np.unique(self.tomo_tokens)
+        for tomo in unique_tomos:
+            tomo_mask = np.array(self.tomo_tokens) == tomo
+            cur_stacks = np.array(self.stack_tokens)[tomo_mask]
+            cur_mbs = np.array(self.mb_tokens)[tomo_mask]
+
+            unique_stacks = np.unique(cur_stacks)
+            for stack_token in unique_stacks:
+                stack_mask = cur_stacks == stack_token
+                unique_mbs = np.unique(cur_mbs[stack_mask])
+                for mb_token in unique_mbs:
+                    print('Tomo:', tomo, 'Stack:', stack_token, 'Membrane:', mb_token)
+        print("")
+
 
     def __get_subvol_paths__(self):
         for tomo_token, value in self.settings.data_splits.items():

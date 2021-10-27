@@ -289,7 +289,6 @@ def sample_uniformly(tomo_seg_path, out_path, tomo_token, stack_token, mb_token,
 
     new_idcs = np.argwhere(new_seg == 1)
     mask10th = np.array(range(new_idcs.shape[0])) % 10 == 0
-    print(np.sum(mask10th))
     new_idcs = new_idcs[mask10th]
     mb_half_idcs = np.argwhere(tomo_seg == 2)
 
@@ -332,6 +331,7 @@ def sample_uniformly(tomo_seg_path, out_path, tomo_token, stack_token, mb_token,
     points = unique_mb_points2.copy()
     points = np.concatenate((points, np.expand_dims(np.array(range(points.shape[0])), 1)), 1)
     remove_mask = np.ones(points.shape[0])
+    print("Thinning sampled points.")
     while points.shape[0] > 1:
         idx = np.random.randint(points.shape[0])
         point = points[idx]

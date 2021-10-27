@@ -70,7 +70,7 @@ def inspect_segmentation_before(star_file, out_star_file, temp_folder):
     print(star_file)
     data_dict = star_utils.read_star_file_as_dict(star_file)
     tomo_tokens = data_dict['tomoToken']
-    bin4_paths = data_dict['tomoBin4Path']
+    tomo_paths = data_dict['tomoPath']
     mb_tokens = data_dict['mbToken']
     stack_tokens = data_dict['stackToken']
     origin_pos_z = []
@@ -81,7 +81,7 @@ def inspect_segmentation_before(star_file, out_star_file, temp_folder):
     mem_count = 0
     for i, tomo_token in enumerate(tomo_tokens):
         if tomo_token != prev_token:
-            tomo = data_utils.load_tomogram(bin4_paths[i])
+            tomo = data_utils.load_tomogram(tomo_paths[i])
             all_seg = data_utils.load_tomogram(os.path.join(temp_folder, tomo_token + '_all_mbs.mrc'))
             prev_token = tomo_token
 

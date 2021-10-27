@@ -73,7 +73,7 @@ class MemBrainer():
 
     def train(self):
         checkpoint_callback = ModelCheckpoint(monitor='Val_Loss', save_last=True)
-        trainer = Trainer(max_epochs=10, callbacks=[checkpoint_callback], default_root_dir=self.ckpt_dir)
+        trainer = Trainer(max_epochs=100, callbacks=[checkpoint_callback], default_root_dir=self.ckpt_dir)
         trainer.fit(self.model, self.dm)
 
     def predict(self, out_dir, star_file=None):
