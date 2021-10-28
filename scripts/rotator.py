@@ -168,12 +168,12 @@ def mp_tomo_split(tomo_tokens, n_pr):
     return tomo_lists
 
 class Rotator(object):
-    def __init__(self, rotation_dir, out_bins, pred_bin, box_ranges, settings, n_pr, pos_star=None,
+    def __init__(self, rotation_dir, out_bins, pred_bin, box_range, settings, n_pr, pos_star=None,
                        store_dir=None, store_normals=False, store_angles=False, preprocess_tomograms=True, lp_cutoff=None):
         self.rotation_dir = rotation_dir
         self.out_bins = out_bins
         self.pred_bin = pred_bin
-        self.box_ranges = box_ranges
+        self.box_ranges = [box_range]
         self.settings = settings
         self.n_pr = n_pr
         self.pos_star = pos_star

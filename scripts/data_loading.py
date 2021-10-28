@@ -97,7 +97,8 @@ def random_noise_subvol(subvol, mean, std):
 
 class MemBrain_dataset(Dataset):
     ##TODO: Implement x-times test-time augmentation
-    def __init__(self, star_file, split, part_dists, dist_thres=None, augment=True, normalize=False, test_phase=False):
+    def __init__(self, star_file, split, part_dists, dist_thres=None, augment=True, normalize=False, test_phase=False,
+                 max_dist=None):
         self.star_file = star_file
         self.augment = augment
         self.test_phase = test_phase
@@ -109,6 +110,13 @@ class MemBrain_dataset(Dataset):
         if self.subvolumes is not None and normalize:
             self.subvolumes = self.__scale_subvolumes()
         self.__print__()
+        if max_dist is not None:
+            self.__cap_distances__(max_dist)
+
+
+    def __cap_distances__(self, max_dist):
+        cap_mask = self.labels > max_dist
+        self.labels[cap_mask] = max_dist
 
     def __print__(self):
         token = ('TRAINING' if self.split == 'train' else 'VALIDATION' if self.split == 'val' else 'TEST')
@@ -178,7 +186,14 @@ class MemBrain_dataset(Dataset):
         all_dists = []
         if isinstance(self.part_dists, list):
             for part_type in self.part_dists:
-                cur_dist = labels['dist_' + part_type]
+                if not isinstance(part_type, list):
+                    cur_dist = labels['dist_' + part_type]
+                else:
+                    cur_dists = []
+                    for entry in part_type:
+                        cur_dists.append(labels['dist_' + entry])
+                    cur_dists = np.stack(cur_dists)
+                    cur_dist = np.min(cur_dists, axis=0)
                 all_dists.append(cur_dist)
             all_dists = np.stack(all_dists, axis=1)
         else:
@@ -218,19 +233,22 @@ class MemBrain_dataset(Dataset):
 
 
 class MemBrain_datamodule(LightningDataModule):
-    def __init__(self, star_file, batch_size, part_dists, dist_thres=None):
+    def __init__(self, star_file, batch_size, part_dists, dist_thres=None, max_dist=None):
         super().__init__()
         self.star_file = star_file
         self.batch_size = batch_size
         self.dist_thres = dist_thres
         self.part_dists = part_dists
+        self.max_dist = max_dist
         self.prepare_data()
 
     def prepare_data(self) -> None:
-        self.train = MemBrain_dataset(self.star_file, 'train', self.part_dists, dist_thres=self.dist_thres)
-        self.val = MemBrain_dataset(self.star_file, 'val', self.part_dists, dist_thres=self.dist_thres)
+        self.train = MemBrain_dataset(self.star_file, 'train', self.part_dists, dist_thres=self.dist_thres,
+                                      max_dist=self.max_dist)
+        self.val = MemBrain_dataset(self.star_file, 'val', self.part_dists, dist_thres=self.dist_thres,
+                                      max_dist=self.max_dist)
         self.test = MemBrain_dataset(self.star_file, 'test', self.part_dists, dist_thres=self.dist_thres,
-                                     augment=False, test_phase=True)
+                                     augment=False, test_phase=True, max_dist=self.max_dist)
 
     def train_dataloader(self):
         return DataLoader(self.train, self.batch_size, shuffle=True)

@@ -205,8 +205,9 @@ def _get_segmentation_side(in_seg_path, tomo, max_mb_dist, mb_ht, orig_pos):
                                                                                    pre_seg.shape[1]-1))
     rangeZ = range(np.maximum(np.min(seg_coords[:, 2]) - add_range, 0), np.minimum(np.max(seg_coords[:, 2]) + add_range,
                                                                                    pre_seg.shape[2]-1))
+    orig_pos -= np.array((rangeX[0], rangeY[0], rangeZ[0]))
+
     ranges = [rangeX, rangeY, rangeZ]
-    # return None, None, ranges
     pre_seg = pre_seg[rangeX[0]:rangeX[-1], rangeY[0]: rangeY[-1], rangeZ[0]:rangeZ[-1]]
     tomo = tomo[rangeX[0]:rangeX[-1], rangeY[0]: rangeY[-1], rangeZ[0]:rangeZ[-1]]
 
@@ -255,7 +256,7 @@ def _get_segmentation_side(in_seg_path, tomo, max_mb_dist, mb_ht, orig_pos):
 
             dots_comp1 = dots[:half1_idcs.shape[0]]
             dots_comp2 = dots[half1_idcs.shape[0]:]
-            if np.mean(dots_comp1) > np.mean(dots_comp2):
+            if np.mean(dots_comp1) < np.mean(dots_comp2):
                 idcs_choice = half1_idcs
             else:
                 idcs_choice = half2_idcs
@@ -397,13 +398,10 @@ def sample_points_on_seg(out_dir, in_star, out_path, max_mb_dist=60, mh_ht=0, ou
     tomo_paths = star_dict['tomoPath']
     mb_tokens = star_dict['mbToken']
     stack_tokens = star_dict['stackToken']
-    # tomo_bins = star_dict['tomoBin']
     seg_paths = star_dict['segPath']
     orig_posX = star_dict['origin_pos_x']
     orig_posY = star_dict['origin_pos_y']
     orig_posZ = star_dict['origin_pos_z']
-    # gt_paths = star_dict['gtPath']
-    # pixel_spacings = star_dict['pixelSpacing']
 
     out_star = os.path.join(out_path, os.path.basename(in_star))
     prev_tomo_token = ''
@@ -422,6 +420,7 @@ def sample_points_on_seg(out_dir, in_star, out_path, max_mb_dist=60, mh_ht=0, ou
         if prev_tomo_token != tomo_token:
             tomo = data_utils.load_tomogram(tomo_path)
             Mbu, tomo, ranges = _get_segmentation_side(in_seg_path, tomo, max_mb_dist, mh_ht, orig_pos)
+
             mic_out_path = os.path.join(out_dir, 'mics', tomo_token + '_' + stack_token + '_' + mb_token + '.mrc')
             seg_out_path = os.path.join(out_dir, 'segs', tomo_token + '_' + stack_token + '_' + mb_token + '.mrc')
             data_utils.store_tomogram(mic_out_path, tomo)
@@ -438,34 +437,4 @@ def sample_points_on_seg(out_dir, in_star, out_path, max_mb_dist=60, mh_ht=0, ou
     del star_dict_out['origin_pos_z']
     star_utils.write_star_file_from_dict(out_star, star_dict_out)
     return out_star
-
-
-
-
-
-
-
-
-
-
-#
-# sample_uniformly(seg_out_path, out_path, tomo_token, stack_token, mb_token, shrink_thres, ranges)
-#
-# particle_csv = strcat(out_path, '/', tomo_token, '_', stack_token, '_', mb_token, '_pred_positions.csv');
-#
-# fprintf(fstar, '%s %s %s %s %s %s %s %s %s %s %s %s %s %s', tomo_path, in_seg_path, particle_csv, tomo_token, mb_token,
-#         stack_token, num2str(ranges(1, 1)), num2str(ranges(1, 2)), num2str(ranges(2, 1)), num2str(ranges(2, 2)),
-#         num2str(ranges(3, 1)), num2str(ranges(3, 2)), gt_path, num2str(pixel_spacing));
-# if any(strcmp('unbinnedOffsetZ', fieldnames(Star)))
-#     fprintf(fstar, ' %s', num2str(unbinned_offset_z));
-# end
-# if any(strcmp('tomoPathDimi', fieldnames(Star)))
-#     fprintf(fstar, ' %s', num2str(tomo_path_dimi));
-# end
-# if any(strcmp('tomoPathDenoised', fieldnames(Star)))
-#     fprintf(fstar, ' %s', num2str(tomo_path_denoised));
-# end
-# fprintf(fstar, '\n');
-# end
-
 

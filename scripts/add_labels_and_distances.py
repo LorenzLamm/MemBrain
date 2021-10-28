@@ -77,6 +77,7 @@ def store_dict_in_hdf5(data_dict, settings):
                         mb_group.create_dataset('dist_' + unique_gt, data=min_dists[unique_gt])
 
 def adjust_GT_data_membranorama_xml(gt_file_name, out_file_name, mode='multiply_pos', mult_fac=1.0):
+    print(gt_file_name)
     tree = ET.parse(gt_file_name)
     root = tree.getroot()
     for i, elem in enumerate(root):

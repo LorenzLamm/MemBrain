@@ -138,7 +138,7 @@ def main():
                                        box_ranges=[6], settings=settings, n_pr=n_pr,
                                        store_dir=os.path.join(project_directory, 'rotated_volumes', 'raw'),
                                        store_normals=True, store_angles=True, preprocess_tomograms=True, lp_cutoff=lp_cutoff)
-    # out_star_name = rotator.rotate_all_volumes()
+    out_star_name = rotator.rotate_all_volumes()
     out_star_name = os.path.join(os.path.join(project_directory, 'rotated_volumes'), os.path.basename(out_star_name))
 
     print(8, time() - time_zero)

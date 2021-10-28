@@ -214,13 +214,13 @@ def convert_csv_to_vtp(in_path, out_path, delimiter=',', hasHeader=False):
         vectors = vtk.vtkDoubleArray()
         vectors.SetNumberOfComponents(3)
         vectors.SetName("Normal")
-        if hasHeader:
-            labels = vtk.vtkDoubleArray()
-            labels.SetNumberOfComponents(1)
-            labels.SetName("Labels")
-            preds = vtk.vtkDoubleArray()
-            preds.SetNumberOfComponents(1)
-            preds.SetName("Prediction")
+        # if hasHeader:
+        #     labels = vtk.vtkDoubleArray()
+        #     labels.SetNumberOfComponents(1)
+        #     labels.SetName("Labels")
+        #     preds = vtk.vtkDoubleArray()
+        #     preds.SetNumberOfComponents(1)
+        #     preds.SetName("Prediction")
         csv_reader = csv.reader(in_file, delimiter=delimiter)
         for i, row in enumerate(csv_reader):
             if hasHeader and i == 0:
@@ -230,8 +230,24 @@ def convert_csv_to_vtp(in_path, out_path, delimiter=',', hasHeader=False):
                 normX = np.argwhere(np.array(row) == 'normalX')[0][0]
                 normY = np.argwhere(np.array(row) == 'normalY')[0][0]
                 normZ = np.argwhere(np.array(row) == 'normalZ')[0][0]
-                label_dist = np.argwhere(np.array(row) == 'labelDist')[0][0]
-                pred_dist = np.argwhere(np.array(row) == 'predDist')[0][0]
+                header_labels = np.unique(row)
+                header_count = 0
+                token_dict = {}
+                for header_label in header_labels:
+                    if header_label.startswith('labelDist'):
+                        header_count += 1
+                        token = header_label[10:]
+                        token_dict[token] = (np.argwhere(np.array(row) == header_label)[0][0],
+                                             np.argwhere(np.array(row) == 'predDist_' + token)[0][0])
+                        exec("labels_" + token + " = vtk.vtkDoubleArray()")
+                        exec("labels_" + token + ".SetNumberOfComponents(1)")
+                        exec("labels_" + token + ".SetName(\"Labels_" + token + "\")")
+                        exec("preds_" + token + " = vtk.vtkDoubleArray()")
+                        exec("preds_" + token + ".SetNumberOfComponents(1)")
+                        exec("preds_" + token + ".SetName(\"Preds_" + token + "\")")
+
+                # label_dist = np.argwhere(np.array(row) == 'labelDist')[0][0]
+                # pred_dist = np.argwhere(np.array(row) == 'predDist')[0][0]
                 continue
             elif i == 0:
                 x_col, y_col, z_col, normX, normY, normZ = 0, 1, 2, 3, 4, 5
@@ -240,8 +256,10 @@ def convert_csv_to_vtp(in_path, out_path, delimiter=',', hasHeader=False):
             points.InsertNextPoint(coords[0], coords[1], coords[2])
             vectors.InsertNextTuple([normal[0], normal[1], normal[2]])
             if hasHeader:
-                labels.InsertNextValue(float(row[label_dist]))
-                preds.InsertNextValue(float(row[pred_dist]))
+                for token in token_dict.keys():
+                    exec("labels_" + token + ".InsertNextValue(float(row[token_dict[token][0]]))")
+                    exec("preds_" + token + ".InsertNextValue(float(row[token_dict[token][1]]))")
+                    # preds.InsertNextValue(float(row[pred_dist]))
 
 
     polydata = vtk.vtkPolyData()
@@ -249,8 +267,10 @@ def convert_csv_to_vtp(in_path, out_path, delimiter=',', hasHeader=False):
     polydata.GetPointData().AddArray(vectors)
     polydata.GetPointData().SetActiveVectors(vectors.GetName())
     if hasHeader:
-        polydata.GetPointData().AddArray(labels)
-        polydata.GetPointData().AddArray(preds)
+        for token in token_dict.keys():
+            exec("polydata.GetPointData().AddArray(labels_" + token + ")")
+            exec("polydata.GetPointData().AddArray(preds_" + token + ")")
+            # polydata.GetPointData().AddArray(preds)
     writer = vtk.vtkXMLPolyDataWriter()
     writer.SetFileName(out_path)
     writer.SetInputData(polydata)

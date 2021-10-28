@@ -73,7 +73,7 @@ def create_gt_dir(tomo_token, gt_out_dir, pos_dir):
 
 
 def create_initial_stars(in_dir, out_star, gt_out_dir, binning=2, with_dimi=True, with_denoised=True,
-                         add_bin4_paths=True, pixel_spacing_bin1=3.42, unbinned_offset_Z=None, training=False):
+                         add_bin4_paths=True, pixel_spacing_bin1=3.42, unbinned_offset_Z=None):
     print("")
     print("Creating initial star files.")
     print("")
@@ -122,7 +122,7 @@ def create_initial_stars(in_dir, out_star, gt_out_dir, binning=2, with_dimi=True
             seg_flag = True
         if not pos_flag:
             print("WARNING: Folder for tomogram " + tomo_token + " does not contain positions folder. Only use for inference!")
-        assert seg_flag, 'folder for tomogram ' + tomo_token + ' does not contain membranes folder'
+        assert seg_flag, 'folder for tomogram ' + tomo_token + ' does not contain membranes folder:  ' + mb_folder
         for seg in os.listdir(mb_folder):
             if not seg.endswith('.mrc'):
                 continue

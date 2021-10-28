@@ -6,7 +6,7 @@ from torch.optim import Adam
 
 
 class MemBrain_model(LightningModule):
-    def __init__(self, box_range):
+    def __init__(self, box_range, part_dists):
         super().__init__()
         self.box_range = box_range
         self.conv1 = nn.Conv3d(1, 32, (3, 3, 3), stride=1, padding=0, dilation=1, groups=1, bias=True,
@@ -22,7 +22,7 @@ class MemBrain_model(LightningModule):
         self.batchnorm2 = torch.nn.BatchNorm3d(32)
         self.batchnorm3 = torch.nn.BatchNorm3d(32)
         self.batchnorm4 = torch.nn.BatchNorm3d(32)
-        self.mlp1 = torch.nn.Linear(self.mlp_fac * 64, 1)
+        self.mlp1 = torch.nn.Linear(self.mlp_fac * 64, len(part_dists))
 
     def forward(self, x):
         x = x.float()

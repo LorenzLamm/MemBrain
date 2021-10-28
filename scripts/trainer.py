@@ -5,6 +5,7 @@ import os
 from pytorch_lightning.callbacks import ModelCheckpoint
 from utils import star_utils, data_utils
 from utils.parameters import ParameterSettings
+from config import *
 
 
 
@@ -45,9 +46,28 @@ def store_pred_results_in_h5(data_dict, out_dir, star_file=None):
                     all_data = entry
                 else:
                     all_data = np.concatenate((all_data, entry), 1)
-            header = ['posX', 'posY', 'posZ', 'labelDist', 'predDist', 'normalX', 'normalY', 'normalZ', 'anglePhi',
-                      'angleTheta', 'anglePsi']
+            header = ['posX', 'posY', 'posZ']
+            for entry in TRAINING_PARTICLE_DISTS:
+                if not isinstance(entry, list):
+                    header.append('labelDist_' + entry)
+                else:
+                    token = entry[0]
+                    for instance in entry[1:]:
+                        token += "_" + instance
+                    header.append('labelDist_' + token)
+
+            for entry in TRAINING_PARTICLE_DISTS:
+                if not isinstance(entry, list):
+                    header.append('predDist_' + entry)
+                else:
+                    token = entry[0]
+                    for instance in entry[1:]:
+                        token += "_" + instance
+                    header.append('predDist_' + token)
+            header += ['normalX', 'normalY', 'normalZ', 'anglePhi', 'angleTheta', 'anglePsi']
+            print(len(header), all_data.shape)
             data_utils.store_array_in_csv(out_file, all_data, header=header)
+            print(out_file)
             data_utils.convert_csv_to_vtp(out_file, out_file[:-3] + 'vtp', hasHeader=True)
     out_star_file = os.path.join(out_dir, os.path.basename(star_file))
     star_utils.write_star_file_from_dict(out_star_file, out_dict)
@@ -57,15 +77,16 @@ def store_pred_results_in_h5(data_dict, out_dir, star_file=None):
 
 
 class MemBrainer():
-    def __init__(self, box_range, dm, project_dir, star_file, ckpt=None):
+    def __init__(self, box_range, dm, project_dir, star_file, part_dists, ckpt=None, max_epochs=100):
         self.box_range = box_range
         self.project_dir = project_dir
         self.star_file = star_file
         self.settings = ParameterSettings(self.star_file)
+        self.max_epochs = max_epochs
         if ckpt is not None:
-            self.model = MemBrain_model.load_from_checkpoint(ckpt, box_range=self.box_range)
+            self.model = MemBrain_model.load_from_checkpoint(ckpt, box_range=self.box_range, part_dists=part_dists)
         else:
-            self.model = MemBrain_model(box_range=self.box_range)
+            self.model = MemBrain_model(box_range=self.box_range, part_dists=part_dists)
         self.ckpt_dir = os.path.join(self.project_dir, '../lightning_logs')
         self.dm = dm
 
@@ -73,7 +94,7 @@ class MemBrainer():
 
     def train(self):
         checkpoint_callback = ModelCheckpoint(monitor='Val_Loss', save_last=True)
-        trainer = Trainer(max_epochs=100, callbacks=[checkpoint_callback], default_root_dir=self.ckpt_dir)
+        trainer = Trainer(max_epochs=self.max_epochs, callbacks=[checkpoint_callback], default_root_dir=self.ckpt_dir)
         trainer.fit(self.model, self.dm)
 
     def predict(self, out_dir, star_file=None):
@@ -111,10 +132,4 @@ class MemBrainer():
         data_dict['position'] *= consider_bin
         out_star = store_pred_results_in_h5(data_dict, out_dir, star_file=star_file)
         return out_star
-
-
-
-
-
-
 

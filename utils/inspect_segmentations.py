@@ -124,9 +124,11 @@ def inspect_segmentation_after(mics_dir, segs_dir, temp_folder):
     """
     mics_paths, mics_tokens, segs_paths, segs_tokens = [], [], [], []
     for file in os.listdir(mics_dir):
-        mics_tokens.append(file)
+        if file.endswith('mrc'):
+            mics_tokens.append(file)
     for file in os.listdir(segs_dir):
-        segs_tokens.append(file)
+        if file.endswith('mrc'):
+            segs_tokens.append(file)
     for file in segs_tokens:
         if file not in mics_tokens:
             segs_tokens.remove(file)
