@@ -5,7 +5,7 @@ MemBrain is a pipeline for the automated detection of membrane-bound proteins in
 the geometry of a pre-segmented membrane to reduce the complexity of the detection task. As a result, MemBrain only requires a small amount of 
 annotated data (even one single annotated membrane can be enough!) and can generalize well to unseen tomograms and membranes.
 
-For user instructions, jump [here](#instructions)
+For user instructions, jump [here](#instructions).
 
 ### Workflow
 #### Inputs
@@ -24,7 +24,14 @@ Currently, this only works for sheet-like membranes. For other membrane types, y
 #### Points and normals sampling
 According to the user's choice, points are sampled on one side of a membrane, together with their respective normal vectors. A normal voting procedure is performed to make the normal vectors more robust.
 
-To confirm that the correct side was picked, you can run the script "verify_picking_side.py".
+To confirm that the correct side was picked, you can run the script "step1b_inspect_picked_sides.py".
+
+#### Subvolume sampling and preprocessing
+In the next step, around each sampled position, a small cubic subvolume is sampled. It will later serve as our input to the neural network and will be assigned a score based on its distance to the next particle center.
+
+After sampling the subvolumes, each of them is normalized by aligning the contained membrane to the subvolume's x-y-plane. For this, the previously sampled normal vector is used. We rotate the subvolume, s.t. the normal vector now points upwards, i.e., it is parallel to the z-axis.
+
+#### Training the neural network
 
 ####
 
