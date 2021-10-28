@@ -5,6 +5,8 @@ MemBrain is a pipeline for the automated detection of membrane-bound proteins in
 the geometry of a pre-segmented membrane to reduce the complexity of the detection task. As a result, MemBrain only requires a small amount of 
 annotated data (even one single annotated membrane can be enough!) and can generalize well to unseen tomograms and membranes.
 
+For user instructions, jump [here](#instructions)
+
 ### Workflow
 #### Inputs
 MemBrain takes as an input the 3D segmentation of a membrane, together with the respective tomogram (both in .mrc or .rec format). 
@@ -26,4 +28,6 @@ To confirm that the correct side was picked, you can run the script "verify_pick
 
 ####
 
+## User instructions
+<a name="instructions"></a>
 
