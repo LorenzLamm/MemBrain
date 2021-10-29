@@ -5,7 +5,7 @@ MemBrain is a pipeline for the automated detection of membrane-bound proteins in
 the geometry of a pre-segmented membrane to reduce the complexity of the detection task. As a result, MemBrain only requires a small amount of 
 annotated data (even one single annotated membrane can be enough!) and can generalize well to unseen tomograms and membranes.
 
-For user instructions, jump [here](#instructions).
+For user instructions, jump [here](#instructions). For trouble shooting, jump [here](#troubleshooting).
 
 ### Workflow
 #### Inputs
@@ -46,9 +46,8 @@ In a final step, we can extract particle positions from the generated heatmaps. 
 The output of this step is a .csv file containing the computed particle locations, as well as a .vtp file, which can be visualized, e.g. using Paraview.
 
 
-
-## User instructions
 <a name="instructions"></a>
+## User instructions
 The following instructions show the required data structure and give hints on how to properly use the scripts.
 
 ### Data structure
@@ -147,6 +146,7 @@ Outputs will be particle centers in .csv and .vtp format, stored in the folder p
 #### Outlook
 In further versions, I will add functionalities for computing particle orientations or a network for the classification of different particles.
 
+<a name="troubleshooting"></a>
 ### Troubleshooting
 - Loss is very high (1e2 and above): Most likely the labels have not been set correctly. Example problem for Membranorama: Membranorama stores positions based on actual pixel spacing, which it receives from a tomograms header. So if the tomogram’s header has pixel spacing 1.0 (often the case after some preprocessing with Python, e.g. CryoCARE), the Membranorama output positions will not show the exact positions w.r.t. pixel spacing.
 Possible solutions:
