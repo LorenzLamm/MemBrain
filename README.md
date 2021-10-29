@@ -86,11 +86,35 @@ tomograms
     │   Tomo23_(...)_bin4_denoised.mrc
     │   Tomo23_(...)_bin4_dose-filt.mrc
 ```
+
+### Setting up the environment
+
 ### Script usage
+#### 0. Adjust config file
+First, open the config file (config.py) and adjust the values according to your needs.
+
+#### 1. Choose the correct picking sides of your membranes and sample points.
+Run the command
+```
+python step1_sample_points.py
+```
+This will first generate the new pipeline directory. Then, it will display the membrane segmentations one by one and lets you choose the side of the membrane to pick points on. Clicking a point with a relatively large distance to the membrane segmentation makes the side-picking more robust.
+
+Afterwards, points and corresponding membrane normal vectors are sampled. Using the command 
+```
+python step1b_inspect_picked_sides.py
+```
+you can inspect the picked sides of the membranes and verify whether they are correct.
+
+#### 2. Extract subvolumes
+For the extraction and preprocessing of subvolumes, run
+```
+python step2_create_subvolumes.py
+```
 
 
 ### Troubleshooting
-- Loss is very high (1e2 and above): Most likely the labels have not been set correctly.Example problem for Membranorama: Membranorama stores positions based on actual pixel spacing, which it receives from a tomograms header. So if the tomogram’s header has pixel spacing 1.0 (often the case after some preprocessing with Python, e.g. CryoCARE), the Membranorama output positions will not show the exact positions w.r.t. pixel spacing.
+- Loss is very high (1e2 and above): Most likely the labels have not been set correctly. Example problem for Membranorama: Membranorama stores positions based on actual pixel spacing, which it receives from a tomograms header. So if the tomogram’s header has pixel spacing 1.0 (often the case after some preprocessing with Python, e.g. CryoCARE), the Membranorama output positions will not show the exact positions w.r.t. pixel spacing.
 Possible solutions:
   - Adjust Membranorama positions (multiply by pixel spacing)
   - Set tomogram pixel spacing to 1.0 in MemBrain pipeline (will lead to further adjustments, e.g. when choosing particle radius)
