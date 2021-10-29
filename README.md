@@ -49,4 +49,10 @@ The output of this step is a .csv file containing the computed particle location
 
 ## User instructions
 <a name="instructions"></a>
+The following instructions show the required data structure and give hints on how to properly use the scripts.
+
+### Data structure
+
+### Script usage
+
 
