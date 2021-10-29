@@ -1,44 +1,66 @@
+## General project settings
 
 PROJECT_NAME = 'trythis'
-PROJECT_DIRECTORY = '/Users/lorenz.lamm/PhD_projects/MemBrain_stuff/test_pipeline'
-TOMO_DIR = '/Users/lorenz.lamm/PhD_projects/MemBrain_Python3/test_data/tomograms'
+PROJECT_DIRECTORY = '/Users/lorenz.lamm/PhD_projects/MemBrain_stuff/test_pipeline' # within this folder, the pipeline folder structure will be created
+TOMO_DIR = '/Users/lorenz.lamm/PhD_projects/MemBrain_Python3/test_data/tomograms' # path of directory containing the data (tomograms, membranes,
 PIXEL_SPACING_BIN1 = 14.08
 UNBINNED_OFFSET_Z = 0.
 TOMO_BINNING = 4
-LP_CUTOFF = None
-N_PR_NORMALVOTING = 4
-N_PR_ROTATION = 4
 
+## Protein details
 
-
-
+# Protein tokens:
+# For each protein you want to detect, specify a dictionary entry. The list of names corresponds to possible namings in the membranorama
+# file. E.g. 'PSII': ['PSII', 'PS2'] means that for protein 'PSII', both 'PSII' and 'PS2' tokens are accepted.
 PROT_TOKENS = {'PSII': ['PSII', 'PS2'],
                    'PSI': ['PSI_', 'PS1'],
                    'b6f': ['b6f', 'bf6'],
                    'UK': ['UK', 'unknown']}
-# PSII_PARTICLE = '/fs/pool/pool-engel/Lorenz/4Lorenz/structures/Chlamy_C2_14A.mrc'
+
+# If you want to use the particle shapes for training, please specify the paths to the structures used to map into
+# the membranorama views for generating the ground truth.
+# In case you have clikced a particle without specific shape, you can also use the string "sphereX" where X corresponds to
+# the desired sphere radius.
 PSII_PARTICLE = '/Users/lorenz.lamm/PhD_projects/MemBrain_Python3/test_data/particles/structures/Chlamy_C2_14A.mrc'
-# B6F_PARTICLE = '/fs/pool/pool-engel/Lorenz/4Lorenz/structures/Cyt b6f_14A_center.mrc'
 B6F_PARTICLE = '/Users/lorenz.lamm/PhD_projects/MemBrain_Python3/test_data/particles/structures/Cyt_b6f_14A_center.mrc'
 UK_PARTICLE = 'sphere12'
-PROT_SHAPES = {'PSII': PSII_PARTICLE, 'b6f': B6F_PARTICLE, 'UK': UK_PARTICLE}
+PROT_SHAPES = {'PSII': PSII_PARTICLE, 'b6f': B6F_PARTICLE, 'UK': UK_PARTICLE} # keys should correspond to keys of PROT_TOKENS
 
 
-# TRAIN_TOKENS = None
-TRAIN_TOKENS = {'Tomo_0002_2': [('S1', 'M7')]}
-#
-VAL_TOKENS = {'Tomo_0002_2': [('S1', 'M10')]}
-# VAL_TOKENS = None
-# TEST_TOKENS = None
-TEST_TOKENS = {'Tomo_17': [('S1_', 'M2')]}
+## Efficiency details
+N_PR_NORMALVOTING = 4 # number of processes used for normal voting
+N_PR_ROTATION = 4 # number of processes used for rotating subvolumes
 
+## Preprocessing details
+BOX_RANGE = 6 # size of subvolumes sampled (cobe of length BOX_RANGE*2)
+LP_CUTOFF = None    # cutoff value for low-pass filtering of tomogram before extracting subvolumes
+                    # (can increase generalizability, but takes some time)
+                    # If LP_CUTOFF = None, no low-pass filtering is performed. Otherwise should be in the range 0.0 - 0.25
 
-BOX_RANGE = 6
 
 ## Training settings
+
+# Specify the tokens used for training, validation and test sets.
+# Should be a dictionary with tomogram tokens corresponding to keys. For each key, specify a list, where each entry of the
+# list specifies a certain membrane via (stack token, membrane token)
+# If tokens are set to NONE, splits are automatically generated using the splits (70, 15, 15)
+# CAUTION: This may lead to different training results and biases, as at least the test set should be fixed.
+TRAIN_TOKENS = {'Tomo_0002_2': [('S1', 'M7')]}
+VAL_TOKENS = {'Tomo_0002_2': [('S1', 'M10')]}
+TEST_TOKENS = {'Tomo_17': [('S1_', 'M2')]}
+# TRAIN_TOKENS = None
+# VAL_TOKENS = None
+# TEST_TOKENS = None
+
+# Specify which distances should be used for training. Should be a list with entries:
+#       - either a protein token --> distances to only this protein class are computed
+#       - a list of protein tokens --> minimal distances to any of the protein tokens in the list are computed
+# For each entry in the list, the network generates a separate output, so you can have multiple heatmaps for multiple
+# particle classes.
+TRAINING_PARTICLE_DISTS = [['PSII', 'UK'], 'b6f']
+
 BATCH_SIZE = 512
 MAX_EPOCHS = 1
-TRAINING_PARTICLE_DISTS = [['PSII', 'UK'], 'b6f']
 MAX_PARTICLE_DISTANCE = 7. # all distances above this value will be capped
 
 
