@@ -9,8 +9,6 @@ from config import *
 
 
 def main():
-    #TODO: make multiple types as distances for 1 map available
-
     project_directory = os.path.join(PROJECT_DIRECTORY, PROJECT_NAME)
     pipeline_structure(project_directory)
 

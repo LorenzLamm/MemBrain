@@ -16,7 +16,7 @@ def main():
                                        box_range=BOX_RANGE, settings=settings, n_pr=N_PR_ROTATION,
                                        store_dir=os.path.join(project_directory, 'rotated_volumes', 'raw'),
                                        store_normals=True, store_angles=True, preprocess_tomograms=True, lp_cutoff=LP_CUTOFF)
-    # out_star_name = rotator.rotate_all_volumes()
+    out_star_name = rotator.rotate_all_volumes()
     out_star_name = os.path.join(os.path.join(project_directory, 'rotated_volumes'), os.path.basename(out_star_name))
 
     add_labels_and_distances(out_star_name, project_directory, prot_tokens=PROT_TOKENS, prot_shapes=PROT_SHAPES,

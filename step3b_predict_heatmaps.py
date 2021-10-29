@@ -4,9 +4,9 @@ from scripts.data_loading import MemBrain_datamodule
 from scripts.trainer import MemBrainer
 from config import *
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument("ckpt", type=str, help="Path to trained model checkpoint.")
-# args = parser.parse_args()
+parser = argparse.ArgumentParser()
+parser.add_argument("ckpt", type=str, help="Path to trained model checkpoint.")
+args = parser.parse_args()
 
 def main():
     project_directory = os.path.join(PROJECT_DIRECTORY, PROJECT_NAME)
@@ -16,7 +16,7 @@ def main():
 
     dm = MemBrain_datamodule(out_star_name, BATCH_SIZE, part_dists=TRAINING_PARTICLE_DISTS, max_dist=MAX_PARTICLE_DISTANCE)
     trainer = MemBrainer(box_range=BOX_RANGE, dm=dm, project_dir=project_directory, star_file=out_star_name,
-                         ckpt='/Users/lorenz.lamm/PhD_projects/MemBrain_stuff/test_pipeline/lightning_logs/lightning_logs/version_7/checkpoints/last.ckpt', part_dists=TRAINING_PARTICLE_DISTS)
+                         ckpt=args.ckpt, part_dists=TRAINING_PARTICLE_DISTS)
     trainer.predict(heatmap_out_dir, star_file=out_star_name)
 
 

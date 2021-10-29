@@ -4,7 +4,6 @@ from scripts.data_loading import MemBrain_datamodule
 from scripts.trainer import MemBrainer
 from config import *
 
-import numpy as np
 parser = argparse.ArgumentParser()
 parser.add_argument("--ckpt", type=str, default=None, help="Path to model checkpoint. Can be used to continue training")
 args = parser.parse_args()
