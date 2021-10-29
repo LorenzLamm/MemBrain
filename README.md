@@ -122,6 +122,31 @@ The flag --ckpt is optional. If you want to continue training from a previously 
 
 Again, you can specify training parameters in the config file, such as number of epochs, batch size, cutoff for particle distances, and particles to use for distance computation, in the config file.
 
+Trained models and checkpoints will be stored in the folder "lightning_logs".
+
+#### 3.2. Inference on data
+Apply the trained model on unseen data by using 
+```
+python step3b_predict_heatmaps.py /path/to/trained/model
+```
+This time, the path to the trained model is not optional, as we need to have a trained model for inference.
+
+Executing this script will generate heatmaps for each membrane and for each particle class specified in the training parameters (config file). They are stored as .csv files and as .vtp files. The latter ones can easily be inspected, e.g. in Paraview.
+
+#### 4. Find particle center positions
+Finally, we can run the script
+```
+python step4_extract_particle_centers.py --eval True
+```
+--eval is again an optional argument. If set to True, evaluation metrics will be computed, such as the Chamfer distance between prediction and ground truth positions, as well as hit statistics based on various hit threshold distances.
+
+In the config file, you can also specify the bandwidths that should be used for clustering. (Per clustering, only one is used. Setting multiple bandwidths can help to compare them). 
+
+Outputs will be particle centers in .csv and .vtp format, stored in the folder particle_centers/raw/
+
+#### Outlook
+In further versions, I will add functionalities for computing particle orientations or a network for the classification of different particles.
+
 ### Troubleshooting
 - Loss is very high (1e2 and above): Most likely the labels have not been set correctly. Example problem for Membranorama: Membranorama stores positions based on actual pixel spacing, which it receives from a tomograms header. So if the tomogram’s header has pixel spacing 1.0 (often the case after some preprocessing with Python, e.g. CryoCARE), the Membranorama output positions will not show the exact positions w.r.t. pixel spacing.
 Possible solutions:
