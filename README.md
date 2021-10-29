@@ -111,7 +111,16 @@ For the extraction and preprocessing of subvolumes, run
 ```
 python step2_create_subvolumes.py
 ```
+In the config file, you can specify the size of the extracted subvolumes, as well as the cutoff value for the low-pass filter applied to the tomogram beforehand.
 
+#### 3.1. Train the neural network
+In case you don't want to use a pre-trained network, you will need to train MemBrain yourself. You can do this using 
+```
+python step3a_training.py --cktp /path/to/previous/ckpt
+```
+The flag --ckpt is optional. If you want to continue training from a previously trained model, you can specify the path to that model here.
+
+Again, you can specify training parameters in the config file, such as number of epochs, batch size, cutoff for particle distances, and particles to use for distance computation, in the config file.
 
 ### Troubleshooting
 - Loss is very high (1e2 and above): Most likely the labels have not been set correctly. Example problem for Membranorama: Membranorama stores positions based on actual pixel spacing, which it receives from a tomograms header. So if the tomogram’s header has pixel spacing 1.0 (often the case after some preprocessing with Python, e.g. CryoCARE), the Membranorama output positions will not show the exact positions w.r.t. pixel spacing.
