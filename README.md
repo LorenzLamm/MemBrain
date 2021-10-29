@@ -21,6 +21,8 @@ tbd.
 As a first step, the user has to choose, which side to pick particles on. For this, the segmentations are visualized and the user is required to click on the correct side of the membrane. (Hint: Maximize the distance between point and membrane for a more robust side-picking).
 Currently, this only works for sheet-like membranes. For other membrane types, you can contact me and we can try to find a solution (lorenz.lamm@helmholtz-muenchen.de).
 
+![Membrane side picking](https://github.com/LorenzLamm/MemBrain/tree/master/imgs/membrane_side_picking.png?raw=true)
+
 #### Points and normals sampling
 According to the user's choice, points are sampled on one side of a membrane, together with their respective normal vectors. A normal voting procedure is performed to make the normal vectors more robust.
 
@@ -87,6 +89,7 @@ tomograms
 ```
 
 ### Setting up the environment
+tbd.
 
 ### Script usage
 #### 0. Adjust config file
