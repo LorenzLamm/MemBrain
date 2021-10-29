@@ -52,7 +52,45 @@ The output of this step is a .csv file containing the computed particle location
 The following instructions show the required data structure and give hints on how to properly use the scripts.
 
 ### Data structure
-
+MemBrain relies on a specific data structure, where tomograms, membrane segmentations, membrane meshes, and ground truth positions should be stored:
+```
+tomograms
+│
+└───Tomo1
+│   │   Tomo1_(...)_bin4_denoised.rec
+|   |   Tomo1_(...)_bin4_dose-filt.rec
+│   │   Remarks: "_denoised" token should be added in case you want to decide later which version to use; "bin4" token is recommended (or respective other binning)
+│   │
+│   └───membranes
+│   │       T1S1M1.mrc
+│   │       T1S18M23.mrc
+│   │       T1S19M1.mrc
+│   │       ...
+│   │       Remarks: stack token (S1, S18, ...) and membrane token (M1, M23, ...) should be included in filenames, ending with (membrane_token + ".mrc")
+|   |
+│   └───meshes
+│   │       T1S1M1.obj
+│   │       T1S18M23.obj
+│   │       T1S19M1.obj
+│   │       ...
+│   │       Remarks: folder only necessary when training with membranorama data and using orientations; files should have names corresponding to membrane segmentations
+|   |   
+│   └───positions
+│   │       T1S1M1.xml
+│   │       T1S18M23.xml
+│   │       T1S19M1.xml
+│   │       ...
+│   │       Remarks: folder only necessary for training. Files shoud be named corresponding to membrane segmentations.
+|
+└───Tomo23
+    │   Tomo23_(...)_bin4_denoised.mrc
+    │   Tomo23_(...)_bin4_dose-filt.mrc
+```
 ### Script usage
 
 
+### Troubleshooting
+- Loss is very high (1e2 and above): Most likely the labels have not been set correctly.Example problem for Membranorama: Membranorama stores positions based on actual pixel spacing, which it receives from a tomograms header. So if the tomogram’s header has pixel spacing 1.0 (often the case after some preprocessing with Python, e.g. CryoCARE), the Membranorama output positions will not show the exact positions w.r.t. pixel spacing.
+Possible solutions:
+  - Adjust Membranorama positions (multiply by pixel spacing)
+  - Set tomogram pixel spacing to 1.0 in MemBrain pipeline (will lead to further adjustments, e.g. when choosing particle radius)
