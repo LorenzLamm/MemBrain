@@ -98,7 +98,10 @@ tomograms
 ```
 
 ### Setting up the environment
-tbd.
+For the correct Python environment, set up a virtual environment of Python 3.8 (e.g. using miniconda). Then activate the environment and install the required packages using
+```
+pip install requirements.txt
+```
 
 ### Script usage
 #### 0. Adjust config file
