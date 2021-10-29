@@ -84,9 +84,10 @@ class MemBrainer():
         self.settings = ParameterSettings(self.star_file)
         self.max_epochs = max_epochs
         if ckpt is not None:
-            self.model = MemBrain_model.load_from_checkpoint(ckpt, box_range=self.box_range, part_dists=part_dists)
+            self.model = MemBrain_model.load_from_checkpoint(ckpt, box_range=self.box_range, part_dists=part_dists,
+                                                             lr=LEARNING_RATE)
         else:
-            self.model = MemBrain_model(box_range=self.box_range, part_dists=part_dists)
+            self.model = MemBrain_model(box_range=self.box_range, part_dists=part_dists, lr=LEARNING_RATE)
         self.ckpt_dir = os.path.join(self.project_dir, '../lightning_logs')
         self.dm = dm
 

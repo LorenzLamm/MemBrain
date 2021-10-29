@@ -152,10 +152,10 @@ def inspect_segmentation_after(mics_dir, segs_dir, temp_folder):
         image_orig = np.transpose(temp_tomo[:, :, z_idx], (1, 0))
         plt.subplot(1,2,1)
         plt.imshow(image_orig, cmap='gray', origin='lower')
-        plt.colorbar()
+        # plt.colorbar()
         plt.subplot(1,2,2)
         plt.imshow(image, cmap='gray', origin='lower')
-        plt.colorbar()
+        # plt.colorbar()
         plt.show()
 
 

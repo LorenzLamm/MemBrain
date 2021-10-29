@@ -62,6 +62,7 @@ TRAINING_PARTICLE_DISTS = [['PSII', 'UK'], 'b6f']
 BATCH_SIZE = 512
 MAX_EPOCHS = 1
 MAX_PARTICLE_DISTANCE = 7. # all distances above this value will be capped
+LEARNING_RATE = 1e-5
 
 
 ## Clustering settings
