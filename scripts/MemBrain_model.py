@@ -3,12 +3,10 @@ from torch.nn import functional as F
 from torch import nn
 from pytorch_lightning.core.lightning import LightningModule
 from torch.optim import Adam
-import numpy as np
 import os
 from config import *
 from utils.data_utils import store_heatmaps_for_dataloader
 from scripts.clustering import MeanShift_clustering
-import pytorch_lightning as pl
 
 
 class MemBrain_model(LightningModule):
@@ -30,9 +28,12 @@ class MemBrain_model(LightningModule):
         self.batchnorm4 = torch.nn.BatchNorm3d(32)
         self.mlp1 = torch.nn.Linear(self.mlp_fac * 64, len(part_dists))
         self.lr = lr
+        self.loss_fn = (F.mse_loss if LOSS_FN == 'MSE' else F.huber_loss if LOSS_FN == 'Huber' else F.l1_loss)
         self.settings = settings
         self.save_hyperparameters("part_dists", "lr")
         self.save_hyperparameters({'max_epochs': MAX_EPOCHS,
+                                   'weight_decay': WEIGHT_DECAY,
+                                   'loss_fn': LOSS_FN,
                                    'max_particle_distance': MAX_PARTICLE_DISTANCE,
                                    'batch_size': BATCH_SIZE,
                                    'cluster_bandwidth': CLUSTER_BANDWIDTHS[0],
@@ -62,7 +63,7 @@ class MemBrain_model(LightningModule):
         x, y = batch
         y = y.float()
         logits = self(x)
-        loss = F.mse_loss(logits, y)
+        loss = self.loss_fn(logits, y)
         self.log("Train_Loss", loss, on_step=False, on_epoch=True)
         return loss
 
@@ -70,7 +71,7 @@ class MemBrain_model(LightningModule):
         x, y = batch[0], batch[1]
         y = y.float()
         logits = self(x)
-        loss = F.mse_loss(logits, y)
+        loss = self.loss_fn(logits, y)
         self.log("hp/Val_Loss", loss, on_step=False, on_epoch=True)
         return loss
 
@@ -108,4 +109,4 @@ class MemBrain_model(LightningModule):
         self.logger.log_hyperparams(self.hparams, {'hp/Val_F1': -0.1, 'hp/Val_precision': -0.1, 'hp/Val_recall': -0.1, 'hp/Val_Loss': 15.})
 
     def configure_optimizers(self):
-        return Adam(self.parameters(), lr=self.lr)
+        return Adam(self.parameters(), lr=self.lr, weight_decay=WEIGHT_DECAY)

@@ -1,14 +1,28 @@
 import os
 import argparse
+import config
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--ckpt", type=str, default=None, help="Path to model checkpoint. Can be used to continue training")
+parser.add_argument("--lr", type=float, default=None, help="Learning rate")
+parser.add_argument("--weight_decay", type=float, default=None, help="Weight decay")
+parser.add_argument("--loss_fn", type=str, default=None, help="Which loss function to use? Huber / MSE / L1")
+args = parser.parse_args()
+if args.lr is not None:
+    config.LEARNING_RATE = args.lr
+if args.weight_decay is not None:
+    config.WEIGHT_DECAY = args.weight_decay
+if args.loss_fn is not None:
+    assert args.loss_fn in ['MSE', 'Huber', 'L1']
+    config.LOSS_FN = args.loss_fn
+
 from scripts.data_loading import MemBrain_datamodule
 from scripts.trainer import MemBrainer
 from config import *
 import random
 import numpy as np
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--ckpt", type=str, default=None, help="Path to model checkpoint. Can be used to continue training")
-args = parser.parse_args()
+
 
 def main():
     #TODO: add choice for max distance during training ( not up to 30 or so)
