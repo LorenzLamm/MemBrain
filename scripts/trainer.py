@@ -32,7 +32,7 @@ class MemBrainer():
 
     def train(self):
         checkpoint_callback = ModelCheckpoint(monitor='Val_Loss', save_last=True)
-        tb_logger = pl_loggers.TensorBoardLogger(self.ckpt_dir, default_hp_metric=False)
+        tb_logger = pl_loggers.TensorBoardLogger(self.ckpt_dir, default_hp_metric=False, name="lightning_logs")
         trainer = Trainer(max_epochs=self.max_epochs, callbacks=[checkpoint_callback], default_root_dir=self.ckpt_dir, logger=tb_logger)
         trainer.fit(self.model, self.dm)
 
