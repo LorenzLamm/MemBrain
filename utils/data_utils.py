@@ -10,6 +10,7 @@ if not torch.cuda.is_available():
     pass
 import lxml.etree as ET
 import utils.star_utils as star_utils
+from config import *
 # mb_tokens = None
 # tomo_tokens = None
 # pred_paths = {}
@@ -197,6 +198,116 @@ def store_gt_arrays_in_vtp(array_dict, out_path):
     if writer.Write() != 1:
         error_msg = 'Error writing the file'
         print(error_msg)
+
+
+def check_mkdir(directory):
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
+
+def store_heatmaps_for_dataloader(dataloader, model, out_dir, star_file, consider_bin):
+    check_mkdir(out_dir)
+    preds = []
+    all_labels = []
+    all_positions = []
+    all_tomos = []
+    all_stacks = []
+    all_mbs = []
+    all_normals = []
+    all_angles = []
+    for batch in dataloader:
+        try:
+            vols, labels, positions, tomo_tokens, stack_tokens, mb_tokens, normals, angles = batch
+        except:
+            raise IOError("Error! Batch information does not contain enough information. If you want to log clustering statistics,"
+                  "set LOG_CLUSTERING_STATS to True in config file")
+        for entry, all_entries in [(labels, all_labels), (positions, all_positions), (tomo_tokens, all_tomos),
+                                   (stack_tokens, all_stacks), (mb_tokens, all_mbs), (normals, all_normals),
+                                   (angles, all_angles)]:
+            if isinstance(entry, tuple):
+                all_entries.append(np.array(entry))
+            else:
+                all_entries.append(entry.detach())
+        batch_pred = model(vols)
+        preds.append(batch_pred.detach())
+    data_dict = {
+        'tomo_token': np.concatenate(all_tomos),
+        'stack_token': np.concatenate(all_stacks),
+        'mb_token': np.concatenate(all_mbs),
+        'position': np.concatenate(all_positions),
+        'label': np.concatenate(all_labels),
+        'pred': np.concatenate(preds),
+        'normal': np.concatenate(all_normals),
+        'angle': np.concatenate(all_angles)
+    }
+    consider_bin = consider_bin
+    data_dict['position'] *= consider_bin
+    out_star = store_pred_results_in_h5(data_dict, out_dir, star_file=star_file)
+    return out_star
+
+
+def store_pred_results_in_h5(data_dict, out_dir, star_file=None):
+    if star_file is not None:
+        star_dict = star_utils.read_star_file_as_dict(star_file)
+        out_dict = {}
+    heatmap_paths = []
+    unique_tomos = np.unique(data_dict['tomo_token'])
+    for unique_tomo in unique_tomos:
+        tomo_mask = data_dict['tomo_token'] == unique_tomo
+        cur_tomo_dict = data_dict.copy()
+        for key in cur_tomo_dict.keys():
+            cur_tomo_dict[key] = cur_tomo_dict[key][tomo_mask]
+        cur_stack_mbs = np.unique(np.concatenate((np.expand_dims(cur_tomo_dict['stack_token'], axis=1),
+                                                  np.expand_dims(cur_tomo_dict['mb_token'], axis=1)), axis=1), axis=0)
+        for unique_stack, unique_mb in cur_stack_mbs:
+            if star_file is not None:
+                cur_idx = star_utils.find_tomo_mb_idx(unique_tomo, unique_mb, star_dict, stack_token=unique_stack)
+                star_utils.merge_line_from_star_dict_to_star_dict(cur_idx, star_dict, out_dict)
+
+            out_file = os.path.join(out_dir, unique_tomo + '_' + unique_stack + '_' + unique_mb + '_heatmap.csv')
+            heatmap_paths.append(out_file)
+            stack_mask = cur_tomo_dict['stack_token'] == unique_stack
+            mb_mask = cur_tomo_dict['mb_token'] == unique_mb
+            stack_mb_mask = np.logical_and(stack_mask, mb_mask)
+
+            cur_stack_mb_dict = cur_tomo_dict.copy()
+            for key in cur_stack_mb_dict:
+                cur_stack_mb_dict[key] = cur_stack_mb_dict[key][stack_mb_mask]
+            all_data = None
+            for key, entry in cur_stack_mb_dict.items():
+                if key in ['tomo_token', 'stack_token', 'mb_token']:
+                    continue
+                if len(entry.shape) == 1:
+                    entry = np.expand_dims(entry, 1)
+                if all_data is None:
+                    all_data = entry
+                else:
+                    all_data = np.concatenate((all_data, entry), 1)
+            header = ['posX', 'posY', 'posZ']
+            for entry in TRAINING_PARTICLE_DISTS:
+                if not isinstance(entry, list):
+                    header.append('labelDist_' + entry)
+                else:
+                    token = entry[0]
+                    for instance in entry[1:]:
+                        token += "_" + instance
+                    header.append('labelDist_' + token)
+
+            for entry in TRAINING_PARTICLE_DISTS:
+                if not isinstance(entry, list):
+                    header.append('predDist_' + entry)
+                else:
+                    token = entry[0]
+                    for instance in entry[1:]:
+                        token += "_" + instance
+                    header.append('predDist_' + token)
+            header += ['normalX', 'normalY', 'normalZ', 'anglePhi', 'angleTheta', 'anglePsi']
+            store_array_in_csv(out_file, all_data, header=header)
+            print(out_file)
+            convert_csv_to_vtp(out_file, out_file[:-3] + 'vtp', hasHeader=True)
+    out_star_file = os.path.join(out_dir, os.path.basename(star_file))
+    star_utils.write_star_file_from_dict(out_star_file, out_dict)
+    star_utils.add_or_change_column_to_star_file(out_star_file, 'heatmapDir', heatmap_paths)
+    return out_star_file
 
 
 def convert_csv_to_vtp(in_path, out_path, delimiter=',', hasHeader=False):

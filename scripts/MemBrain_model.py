@@ -3,10 +3,16 @@ from torch.nn import functional as F
 from torch import nn
 from pytorch_lightning.core.lightning import LightningModule
 from torch.optim import Adam
+import numpy as np
+import os
+from config import *
+from utils.data_utils import store_heatmaps_for_dataloader
+from scripts.clustering import MeanShift_clustering
+import pytorch_lightning as pl
 
 
 class MemBrain_model(LightningModule):
-    def __init__(self, box_range, part_dists, lr):
+    def __init__(self, box_range, part_dists, lr, settings=None):
         super().__init__()
         self.box_range = box_range
         self.conv1 = nn.Conv3d(1, 32, (3, 3, 3), stride=1, padding=0, dilation=1, groups=1, bias=True,
@@ -24,6 +30,15 @@ class MemBrain_model(LightningModule):
         self.batchnorm4 = torch.nn.BatchNorm3d(32)
         self.mlp1 = torch.nn.Linear(self.mlp_fac * 64, len(part_dists))
         self.lr = lr
+        self.settings = settings
+        self.save_hyperparameters("part_dists", "lr")
+        self.save_hyperparameters({'max_epochs': MAX_EPOCHS,
+                                   'max_particle_distance': MAX_PARTICLE_DISTANCE,
+                                   'batch_size': BATCH_SIZE,
+                                   'cluster_bandwidth': CLUSTER_BANDWIDTHS[0],
+                                   'recluster_thres': RECLUSTER_THRES[0],
+                                   'recluster_bw': RECLUSTER_BANDWIDTHS[0],
+                                   'normalized_volumes': USE_ROTATION_NORMALIZATION})
 
     def forward(self, x):
         x = x.float()
@@ -48,16 +63,49 @@ class MemBrain_model(LightningModule):
         y = y.float()
         logits = self(x)
         loss = F.mse_loss(logits, y)
-        self.log("Train_Loss", loss)
+        self.log("Train_Loss", loss, on_step=False, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
-        x, y = batch
+        x, y = batch[0], batch[1]
         y = y.float()
         logits = self(x)
         loss = F.mse_loss(logits, y)
-        self.log("Val_Loss", loss)
+        self.log("hp/Val_Loss", loss, on_step=False, on_epoch=True)
         return loss
+
+    def on_validation_epoch_end(self):
+        """
+        If clustering stats during training is activated, this will be performed here (for activating, check config file)
+        """
+
+        if LOG_CLUSTERING_STATS and self.current_epoch > 0 and \
+                self.current_epoch % LOG_CLUSTERING_EVERY_NTH_EPOCH == 0:
+            val_data_loader = self.val_dataloader()
+
+            out_star = store_heatmaps_for_dataloader(val_data_loader, self, out_dir=os.path.join(PROJECT_DIRECTORY, PROJECT_NAME, 'temp_files', 'heatmaps'),
+                                          star_file=self.settings.star_file, consider_bin=self.settings.consider_bin)
+            ms = MeanShift_clustering(out_star, os.path.join(PROJECT_DIRECTORY, PROJECT_NAME, 'temp_files', 'cluster_centers'))
+            try:
+                cluster_star = ms.start_clustering(CLUSTER_BANDWIDTHS[0], recluster_thres=RECLUSTER_THRES[0], recluster_bw=RECLUSTER_BANDWIDTHS[0])
+                ms.evaluate_clustering(cluster_star, PROT_TOKENS, bandwidth=CLUSTER_BANDWIDTHS[0], store_mb_wise=True)
+                gt_hits = ms.all_metrics['confusion_matrix'][0][0]
+                gt_misses = ms.all_metrics['confusion_matrix'][0][1]
+                pred_hits = ms.all_metrics['confusion_matrix'][0][2]
+                pred_misses = ms.all_metrics['confusion_matrix'][0][3]
+                prec = pred_hits / (pred_hits + pred_misses)
+                rec = gt_hits / (gt_hits + gt_misses)
+                f1 = 2 * prec * rec / (prec + rec)
+                self.log("hp/Val_precision", prec, on_epoch=True)
+                self.log("hp/Val_recall", rec, on_epoch=True)
+                self.log("hp/Val_F1", f1, on_epoch=True)
+            except:
+                self.log("hp/Val_precision", -0.1, on_epoch=True)
+                self.log("hp/Val_recall", -0.1, on_epoch=True)
+                self.log("hp/Val_F1", -0.1, on_epoch=True)
+
+    def on_train_start(self):
+        self.logger.log_hyperparams(self.hparams, {'hp/Val_F1': -0.1, 'hp/Val_precision': -0.1, 'hp/Val_recall': -0.1, 'hp/Val_Loss': 15.})
 
     def configure_optimizers(self):
         return Adam(self.parameters(), lr=self.lr)

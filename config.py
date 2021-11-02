@@ -32,6 +32,7 @@ N_PR_NORMALVOTING = 4 # number of processes used for normal voting
 N_PR_ROTATION = 4 # number of processes used for rotating subvolumes
 
 ## Preprocessing details
+USE_ROTATION_NORMALIZATION = True
 BOX_RANGE = 6 # size of subvolumes sampled (cobe of length BOX_RANGE*2)
 LP_CUTOFF = None    # cutoff value for low-pass filtering of tomogram before extracting subvolumes
                     # (can increase generalizability, but takes some time)
@@ -58,15 +59,26 @@ TEST_TOKENS = {'Tomo_17': [('S1_', 'M2')]}
 # For each entry in the list, the network generates a separate output, so you can have multiple heatmaps for multiple
 # particle classes.
 TRAINING_PARTICLE_DISTS = [['PSII', 'UK'], 'b6f']
+TRAINING_PARTICLE_DISTS = [['PSII', 'UK']]
+
+LOG_CLUSTERING_STATS = True # Flag whether or not to log clustering statistics during training
+                            # Currently only works for single output heatmaps
+                            # If more than one cluster bandwidths are specified, only the first will be used
+LOG_CLUSTERING_EVERY_NTH_EPOCH = 2  # Every nth epoch, clustering will be performed to validate training (only applies if
+                                    # LOG_CLUSTERING_STATS is True
 
 BATCH_SIZE = 512
-MAX_EPOCHS = 1
+MAX_EPOCHS = 10
 MAX_PARTICLE_DISTANCE = 7. # all distances above this value will be capped
 LEARNING_RATE = 1e-5
 
 
 ## Clustering settings
-CLUSTER_BANDWIDTHS = [15, 23, 28]
+CLUSTER_BANDWIDTHS = [18, 23, 28]
+RECLUSTER_FLAG = True  # Should the clusters be re-clustered if they are too large?
+RECLUSTER_THRES = [78, 78, 78]  # If a cluster has a diameters longer than these values, they will be reclustered with
+                                # a smaller bandwidth. Needs to be of the same shape es CLUSTER_BANDWIDTHS
+RECLUSTER_BANDWIDTHS = [13, 18, 24]  # Bandwidths for reclustering. Needs to be of the same shape es CLUSTER_BANDWIDTHS
 
 
 ## Expert settings

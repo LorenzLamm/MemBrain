@@ -13,8 +13,12 @@ def main():
     project_directory = os.path.join(PROJECT_DIRECTORY, PROJECT_NAME)
     heatmap_star = os.path.join(project_directory, 'heatmaps', PROJECT_NAME + '_with_inner_outer.star')
     ms = MeanShift_clustering(heatmap_star, os.path.join(project_directory, 'cluster_centers', 'plain'))
-    for bandwidth in CLUSTER_BANDWIDTHS:
-        cluster_star = ms.start_clustering(bandwidth=bandwidth)
+    for i, bandwidth in enumerate(CLUSTER_BANDWIDTHS):
+        if RECLUSTER_FLAG:
+            cluster_star = ms.start_clustering(bandwidth=bandwidth, recluster_thres=RECLUSTER_THRES[i],
+                                               recluster_bw=RECLUSTER_BANDWIDTHS[i])
+        else:
+            cluster_star = ms.start_clustering(bandwidth=bandwidth)
         if args.eval:
             ms.evaluate_clustering(cluster_star, PROT_TOKENS, bandwidth=bandwidth, store_mb_wise=True)
     if args.eval:

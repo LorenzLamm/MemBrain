@@ -1,5 +1,5 @@
 import numpy as np
-from utils.data_utils import get_csv_data
+from utils.data_utils import get_csv_data, check_mkdir
 from utils.MeanShift_utils import mean_shift
 from utils import star_utils, data_utils
 from sklearn.metrics.pairwise import euclidean_distances
@@ -17,6 +17,7 @@ class MeanShift_clustering(object):
         self.recluster_bw = None
         self.star_file = star_file
         self.settings = ParameterSettings(self.star_file)
+        check_mkdir(out_dir)
         self.out_dir = out_dir
         self.detection_by_classification = detection_by_classification
         self.__initialize_metrics()
@@ -196,7 +197,7 @@ class MeanShift_clustering(object):
         all_coords, scores = extract_coords_and_scores(data, header)
         if not self.detection_by_classification:
             scores *= -1
-        pos_thres = (0.0 if self.detection_by_classification else -8.0)
+        pos_thres = (0.0 if self.detection_by_classification else -5.0)
         pos_mask = scores > pos_thres
         coords = all_coords[pos_mask]
         print("Start clustering.")
@@ -255,7 +256,10 @@ def extract_coords_and_scores(data, header):
         volume_x_id = np.squeeze(np.argwhere(np.array(header) == 'posX'))
         volume_y_id = np.squeeze(np.argwhere(np.array(header) == 'posY'))
         volume_z_id = np.squeeze(np.argwhere(np.array(header) == 'posZ'))
-        score_id = np.squeeze(np.argwhere(np.array(header) == 'predDist'))
+        for k, entry in enumerate(header):
+            if entry.startswith('predDist'):
+                score_id = k
+                break
     else:
         volume_x_id = 0
         volume_y_id = 1

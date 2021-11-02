@@ -5,6 +5,7 @@ import numpy as np
 from utils.parameters import ParameterSettings
 from typing import Optional
 from scripts.add_labels_and_distances import load_hdf5_files
+from config import *
 
 
 def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_tokens=None, random_ratio=(60,20,20)):
@@ -246,7 +247,7 @@ class MemBrain_datamodule(LightningDataModule):
         self.train = MemBrain_dataset(self.star_file, 'train', self.part_dists, dist_thres=self.dist_thres,
                                       max_dist=self.max_dist)
         self.val = MemBrain_dataset(self.star_file, 'val', self.part_dists, dist_thres=self.dist_thres,
-                                      max_dist=self.max_dist)
+                                      max_dist=self.max_dist, test_phase=LOG_CLUSTERING_STATS)
         self.test = MemBrain_dataset(self.star_file, 'test', self.part_dists, dist_thres=self.dist_thres,
                                      augment=False, test_phase=True, max_dist=self.max_dist)
 
