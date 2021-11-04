@@ -6,6 +6,7 @@ from utils.parameters import ParameterSettings
 from typing import Optional
 from scripts.add_labels_and_distances import load_hdf5_files
 from config import *
+import scripts.rotator as rotator
 
 
 def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_tokens=None, random_ratio=(60,20,20)):
@@ -106,6 +107,10 @@ class MemBrain_dataset(Dataset):
         self.test_phase = test_phase
         self.settings = ParameterSettings(self.star_file)
         self.split = split
+        if self.split == 'train' and ROTATION_AUGMENTATION_DURING_TRAINING:
+            self.use_rotation_augmentation = True
+        else:
+            self.use_rotation_augmentation = False
         self.part_dists = part_dists
         self.__get_subvol_paths__()
         self.__load_h5_data()
@@ -209,20 +214,53 @@ class MemBrain_dataset(Dataset):
         self.subvolumes -= np.expand_dims(min, (1,2,3))
         self.subvolumes /= (np.expand_dims(max - min, (1,2,3)))
 
+    def __scale_single_subvolume(self, subvol):
+        min = np.min(subvol)
+        max = np.max(subvol)
+        subvol -= min
+        subvol /= (max - min)
+        return subvol
+
 
 
     def __augment_subvol(self, subvol):
         subvol = rotate_90_subvol(subvol, np.random.randint(0, 4))
-        for func in [flipx, flipy, lambda x: random_noise_subvol(x, mean=0, std=0.15)]:
-            if np.random.random(1) > 0.5:
+        for k, func in enumerate([flipx, flipy, lambda x: random_noise_subvol(x, mean=0, std=0.15)]):
+            if np.random.random(1) > 0.5 or k == 2 and np.random.random(1) > 0.5:
                 subvol = func(subvol)
-        return subvol
+        subvol = self.__scale_single_subvolume(subvol)
+        return subvol.copy()
+
+
+    def __rand_rot_augmentation(self, subvol):
+        rand_angles = (np.random.uniform(-np.pi, np.pi), np.random.uniform(-np.pi, np.pi),
+                       np.random.uniform(-np.pi, np.pi))
+        add_comp = BOX_RANGE * 2
+        particle_cen = [add_comp] * 3
+        svol_cent = np.array(particle_cen)
+        rot_subvol = rotator.rotate_vol_for_angles(subvol, rand_angles, svol_cent)
+        rot_subvol = rot_subvol[int(particle_cen[0] - BOX_RANGE):int(particle_cen[0] + BOX_RANGE),
+                   int(particle_cen[1] - BOX_RANGE):int(particle_cen[1] + BOX_RANGE),
+                   int(particle_cen[2] - BOX_RANGE):int(particle_cen[2] + BOX_RANGE)]
+        return rot_subvol
+
+
 
     def __getitem__(self, idx):
         subvol = self.subvolumes[idx]
         label = self.labels[idx]
+        if not USE_ROTATION_NORMALIZATION:
+            if self.use_rotation_augmentation:
+                subvol = self.__rand_rot_augmentation(subvol)
+            else:
+                add_comp = BOX_RANGE * 2
+                particle_cen = [add_comp] * 3
+                subvol = subvol[int(particle_cen[0] - BOX_RANGE):int(particle_cen[0] + BOX_RANGE),
+                             int(particle_cen[1] - BOX_RANGE):int(particle_cen[1] + BOX_RANGE),
+                             int(particle_cen[2] - BOX_RANGE):int(particle_cen[2] + BOX_RANGE)]
+
         if self.augment:
-            self.__augment_subvol(subvol)
+            subvol = self.__augment_subvol(subvol)
         if self.test_phase:
             return np.expand_dims(subvol, 0), label, self.positions[idx], self.tomo_tokens[idx], \
                    self.stack_tokens[idx], self.mb_tokens[idx], self.normals[idx], self.angles[idx]

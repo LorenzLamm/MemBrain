@@ -29,10 +29,11 @@ PROT_SHAPES = {'PSII': PSII_PARTICLE, 'b6f': B6F_PARTICLE, 'UK': UK_PARTICLE} # 
 
 ## Efficiency details
 N_PR_NORMALVOTING = 4 # number of processes used for normal voting
-N_PR_ROTATION = 4 # number of processes used for rotating subvolumes
+N_PR_ROTATION = 1 # number of processes used for rotating subvolumes; only recommended for small subvolumes and many sampled points --> mostly 1 is enough!
 
 ## Preprocessing details
-USE_ROTATION_NORMALIZATION = True
+USE_ROTATION_NORMALIZATION = False
+ROTATION_AUGMENTATION_DURING_TRAINING = True
 BOX_RANGE = 6 # size of subvolumes sampled (cobe of length BOX_RANGE*2)
 LP_CUTOFF = None    # cutoff value for low-pass filtering of tomogram before extracting subvolumes
                     # (can increase generalizability, but takes some time)
@@ -73,7 +74,7 @@ MAX_PARTICLE_DISTANCE = 7. # all distances above this value will be capped
 LEARNING_RATE = 1e-5
 WEIGHT_DECAY = 1e-3
 LOSS_FN = 'MSE' # 'Huber', 'L1'   ## Choose between MSE, Huber or L1 loss
-USE_GPU = True
+USE_GPU = False
 
 
 ## Clustering settings

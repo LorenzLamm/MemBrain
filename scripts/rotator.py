@@ -12,6 +12,7 @@ from utils import star_utils, data_utils
 import multiprocessing as mp
 from scipy.ndimage import rotate
 from utils.rigid_3d import Rigid3D
+from config import *
 
 
 def compute_all_Euler_angles(in_dir, out_dir, in_del=',', out_del=',', hasHeader=False):
@@ -22,6 +23,19 @@ def compute_all_Euler_angles(in_dir, out_dir, in_del=',', out_del=',', hasHeader
         if file.endswith('.csv'):
             compute_Euler_angles_for_normals(os.path.join(in_dir, file), os.path.join(out_dir, file), in_del=in_del,
                                              out_del=out_del, hasHeader=hasHeader)
+
+def rotate_vol_for_angles(volume, angs, svol_cent):
+    """
+    Rotate volume around svol_cent with Z-Y-Z Euler angles.
+    @param volume: volume to rotate
+    @param angs: Euler angles
+    @param svol_cent: center to rotate around
+    @return: rotated volume
+    """
+    r3d = Rigid3D()
+    r3d.q = r3d.make_r_euler(angles=np.radians(angs), mode='zyz_in_active')
+    particle = r3d.transformArray(volume, origin=svol_cent, order=3, prefilter=True)
+    return particle
 
 
 def eulerAnglesToRotationMatrix(theta):
@@ -266,23 +280,32 @@ class Rotator(object):
         print("Processing subvolumes for Tomo: ", tomo_token, "  Membrane:", mb_token, "  Bin:", out_bin)
 
         all_lines = data_utils.get_csv_data(csv_path)
-        parallel_mask = self._get_parallel_line_split(all_lines)
-        processes = []
-        manager = mp.Manager()
-        return_dict = manager.dict()
-        for pr_id in range(self.n_pr):
-            pr = mp.Process(target=self.rotate_parallel_split,
-                            args=(return_dict, all_lines, parallel_mask, pr_id, box_range, tomo,
-                                  tomo_token, mb_token, pred_scale))
-            pr.start()
-            processes.append(pr)
-        for pr_id in range(self.n_pr):
-            pr = processes[pr_id]
-            pr.join()
-        all_volumes = np.concatenate([return_dict[pr_id][0] for pr_id in range(self.n_pr)], 0)
-        all_positions = np.concatenate([return_dict[pr_id][1] for pr_id in range(self.n_pr)], 0)
-        all_normals = np.concatenate([return_dict[pr_id][2] for pr_id in range(self.n_pr)], 0)
-        all_angles = np.concatenate([return_dict[pr_id][3] for pr_id in range(self.n_pr)], 0)
+        if self.n_pr > 1:
+            parallel_mask = self._get_parallel_line_split(all_lines)
+            processes = []
+            manager = mp.Manager()
+            return_dict = manager.dict()
+            for pr_id in range(self.n_pr):
+                pr = mp.Process(target=self.rotate_parallel_split,
+                                args=(return_dict, all_lines, parallel_mask, pr_id, box_range, tomo,
+                                      tomo_token, mb_token, pred_scale))
+                pr.start()
+                processes.append(pr)
+            for pr_id in range(self.n_pr):
+                pr = processes[pr_id]
+                pr.join()
+            time_zero = time.time()
+            time_zero = time.time()
+
+            all_volumes = np.concatenate([return_dict[pr_id][0] for pr_id in range(self.n_pr)], 0)
+            all_positions = np.concatenate([return_dict[pr_id][1] for pr_id in range(self.n_pr)], 0)
+            all_normals = np.concatenate([return_dict[pr_id][2] for pr_id in range(self.n_pr)], 0)
+            all_angles = np.concatenate([return_dict[pr_id][3] for pr_id in range(self.n_pr)], 0)
+        else:
+            all_volumes, all_positions, all_normals, all_angles = self.rotate_parallel_split(None, all_lines, None, 0,
+                                                                                             box_range, tomo,
+                                                                                             tomo_token, mb_token,
+                                                                                             pred_scale)
         return all_volumes, all_positions, all_normals, all_angles
 
 
@@ -326,10 +349,15 @@ class Rotator(object):
         print('This process needs to convert', np.sum(line_mask == pr_id), 'subvolumes.')
         print()
 
-        cur_mask = line_mask == pr_id
-        cur_lines = all_lines[cur_mask]
-
-        all_volumes = np.zeros((0, 2 * box_range, 2 * box_range, 2 * box_range))
+        if self.n_pr > 1:
+            cur_mask = line_mask == pr_id
+            cur_lines = all_lines[cur_mask]
+        else:
+            cur_lines = all_lines
+        if USE_ROTATION_NORMALIZATION:
+            all_volumes = np.zeros((0, 2 * box_range, 2 * box_range, 2 * box_range))
+        else:
+            all_volumes = np.zeros((0, 4 * box_range + 1, 4 * box_range + 1, 4 * box_range + 1))
         all_positions = np.zeros((0, 3))
         all_normals = np.zeros((0, 3))
         all_angles = np.zeros((0, 3))
@@ -358,20 +386,21 @@ class Rotator(object):
             volume = tomo[int(round(positions[0]) - add_component): int(round(positions[0]) + add_component) + 1,
                      int(round(positions[1]) - add_component): int(round(positions[1]) + add_component) + 1,
                      int(round(positions[2]) - add_component): int(round(positions[2]) + add_component) + 1]
-            coord, angs = positions, angles
-            svol_cent = np.array([add_component] * 3)
-
-            particle = self.rotate_vol_for_angles(volume, angs, svol_cent)
-            particle_cen = [add_component] * 3
-            particle = particle[int(particle_cen[0] - box_range):int(particle_cen[0] + box_range),
-                       int(particle_cen[1] - box_range):int(particle_cen[1] + box_range),
-                       int(particle_cen[2] - box_range):int(particle_cen[2] + box_range)]
+            if USE_ROTATION_NORMALIZATION:
+                coord, angs = positions, angles
+                svol_cent = np.array([add_component] * 3)
+                particle = rotate_vol_for_angles(volume, angs, svol_cent)
+                particle_cen = [add_component] * 3
+                particle = particle[int(particle_cen[0] - box_range):int(particle_cen[0] + box_range),
+                           int(particle_cen[1] - box_range):int(particle_cen[1] + box_range),
+                           int(particle_cen[2] - box_range):int(particle_cen[2] + box_range)]
+            else:
+                particle = volume
             positions_list.append(positions)
             particle_list.append(particle)
             if self.store_dir is not None:
                 filename = os.path.join(self.store_dir, tomo_token + mb_token + '_' + str(i) + '_centervol.mrc')
                 data_utils.store_tomogram(filename, particle)
-
         if self.store_angles:
             temp_angles = np.stack(angles_list, axis=0)
             all_angles = np.concatenate((all_angles, temp_angles), 0)
@@ -382,7 +411,10 @@ class Rotator(object):
         temp_positions = np.stack(positions_list, axis=0)
         all_volumes = np.concatenate((all_volumes, temp_volumes), 0)
         all_positions = np.concatenate((all_positions, temp_positions), 0)
-        return_dict[pr_id] = [all_volumes, all_positions, all_normals, all_angles]
+        if self.n_pr > 1:
+            return_dict[pr_id] = [all_volumes, all_positions, all_normals, all_angles]
+        else:
+            return all_volumes, all_positions, all_normals, all_angles
 
     def check_in_range(self, positions, add_component, tomo_shape):
         """
@@ -402,18 +434,18 @@ class Rotator(object):
                 valid = False
         return valid
 
-    def rotate_vol_for_angles(self, volume, angs, svol_cent):
-        """
-        Rotate volume around svol_cent with Z-Y-Z Euler angles.
-        @param volume: volume to rotate
-        @param angs: Euler angles
-        @param svol_cent: center to rotate around
-        @return: rotated volume
-        """
-        r3d = Rigid3D()
-        r3d.q = r3d.make_r_euler(angles=np.radians(angs), mode='zyz_in_active')
-        particle = r3d.transformArray(volume, origin=svol_cent, order=3, prefilter=True)
-        return particle
+    # def rotate_vol_for_angles(self, volume, angs, svol_cent):
+    #     """
+    #     Rotate volume around svol_cent with Z-Y-Z Euler angles.
+    #     @param volume: volume to rotate
+    #     @param angs: Euler angles
+    #     @param svol_cent: center to rotate around
+    #     @return: rotated volume
+    #     """
+    #     r3d = Rigid3D()
+    #     r3d.q = r3d.make_r_euler(angles=np.radians(angs), mode='zyz_in_active')
+    #     particle = r3d.transformArray(volume, origin=svol_cent, order=3, prefilter=True)
+    #     return particle
 
 
     def rotate_vol_for_angles_alt(self, volume, angs):
