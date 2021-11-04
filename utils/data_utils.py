@@ -214,6 +214,7 @@ def store_heatmaps_for_dataloader(dataloader, model, out_dir, star_file, conside
     all_mbs = []
     all_normals = []
     all_angles = []
+    device = ('cuda' if USE_GPU else 'cpu')
     for batch in dataloader:
         try:
             vols, labels, positions, tomo_tokens, stack_tokens, mb_tokens, normals, angles = batch
@@ -227,8 +228,8 @@ def store_heatmaps_for_dataloader(dataloader, model, out_dir, star_file, conside
                 all_entries.append(np.array(entry))
             else:
                 all_entries.append(entry.detach())
-        batch_pred = model(vols)
-        preds.append(batch_pred.detach())
+        batch_pred = model(vols.to(device))
+        preds.append(batch_pred.detach().cpu())
     data_dict = {
         'tomo_token': np.concatenate(all_tomos),
         'stack_token': np.concatenate(all_stacks),

@@ -73,6 +73,7 @@ MAX_PARTICLE_DISTANCE = 7. # all distances above this value will be capped
 LEARNING_RATE = 1e-5
 WEIGHT_DECAY = 1e-3
 LOSS_FN = 'MSE' # 'Huber', 'L1'   ## Choose between MSE, Huber or L1 loss
+USE_GPU = True
 
 
 ## Clustering settings

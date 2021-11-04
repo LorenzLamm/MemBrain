@@ -8,6 +8,7 @@ from utils.parameters import ParameterSettings
 from config import *
 from utils.data_utils import store_heatmaps_for_dataloader
 from pytorch_lightning import loggers as pl_loggers
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 
 
@@ -31,9 +32,11 @@ class MemBrainer():
 
 
     def train(self):
-        checkpoint_callback = ModelCheckpoint(monitor='Val_Loss', save_last=True)
+        checkpoint_callback = ModelCheckpoint(monitor='hp/Val_Loss', save_last=True, filename="{epoch}-{Val_Loss:.2f}-{Val_F1:.2f}")
+        early_stop_callback = EarlyStopping(monitor='hp/Val_Loss', min_delta=0.0, patience=80, mode='min')
         tb_logger = pl_loggers.TensorBoardLogger(self.ckpt_dir, default_hp_metric=False, name="lightning_logs")
-        trainer = Trainer(max_epochs=self.max_epochs, callbacks=[checkpoint_callback], default_root_dir=self.ckpt_dir, logger=tb_logger)
+        trainer = Trainer(max_epochs=self.max_epochs, callbacks=[checkpoint_callback, early_stop_callback], default_root_dir=self.ckpt_dir,
+                          logger=tb_logger, gpus=(1 if USE_GPU else 0))
         trainer.fit(self.model, self.dm)
 
     def predict(self, out_dir, star_file=None):

@@ -9,8 +9,9 @@ from config import *
 
 
 def main():
+    #TODO(!!): Fix segmentation fusion for stacks with multiple names (will be overwritten otherwise)
     project_directory = os.path.join(PROJECT_DIRECTORY, PROJECT_NAME)
-    pipeline_structure(project_directory)
+    pipeline_structure(project_directory, TOMO_DIR)
 
     out_star = os.path.join(project_directory, 'initial_stars', PROJECT_NAME + '.star')
     out_star2 = os.path.join(project_directory,'initial_stars', PROJECT_NAME + '_with_inner_outer.star')

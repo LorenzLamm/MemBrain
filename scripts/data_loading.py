@@ -22,6 +22,7 @@ def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_to
     assert np.sum(random_ratio) == 100, 'Sum of splits should always be 100!'
     star_dict = star_utils.read_star_file_as_dict(star_file)
     tomo_tokens = np.unique(star_dict['tomoToken'])
+    all_tomo_tokens = star_dict['tomoToken']
     split_array = np.array(['no_choice'] * len(star_dict['tomoToken']))
     if train_tokens is not None:
         for tomo_token in train_tokens.keys():
@@ -43,17 +44,17 @@ def add_datasplit_to_star(star_file, train_tokens=None, val_tokens=None, test_to
     val_flag = val_tokens is not None
     if val_tokens is None and tomo_tokens.shape[0] >= 100. / (random_ratio[1] + 1e-10):
         val_flag = True
-        num_tomos_val = np.floor(random_ratio[1] / 100 * tomo_tokens.shape[0])
+        num_tomos_val = int(np.floor(random_ratio[1] / 100 * tomo_tokens.shape[0]))
         tomo_choice_val = np.random.choice(tomo_tokens, num_tomos_val, replace=False)
-        split_array[np.isin(tomo_tokens, tomo_choice_val)] = 'val'
+        split_array[np.isin(all_tomo_tokens, tomo_choice_val)] = 'val'
 
     test_flag = test_tokens is not None
     if test_tokens is None and tomo_tokens.shape[0] >= 100. / (random_ratio[2] + 1e-10):
         test_flag = True
-        num_tomos_test = np.floor(random_ratio[2] / 100 * tomo_tokens.shape[0])
+        num_tomos_test = int(np.floor(random_ratio[2] / 100 * tomo_tokens.shape[0]))
         tomo_choice_test = np.random.choice(tomo_tokens[np.logical_not(np.isin(tomo_tokens, tomo_choice_val))],
                                             num_tomos_test, replace=False)
-        split_array[np.isin(tomo_tokens, tomo_choice_test)] = 'test'
+        split_array[np.isin(all_tomo_tokens, tomo_choice_test)] = 'test'
     remaining_idcs = np.array(np.argwhere(split_array == 'no_choice')).squeeze()
     if not val_flag:
         num_vals = int(np.floor(random_ratio[1] / 100 * split_array.shape[0]))

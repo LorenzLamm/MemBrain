@@ -40,6 +40,7 @@ class MemBrain_model(LightningModule):
                                    'recluster_thres': RECLUSTER_THRES[0],
                                    'recluster_bw': RECLUSTER_BANDWIDTHS[0],
                                    'normalized_volumes': USE_ROTATION_NORMALIZATION})
+        self.best_f1 = 0.
 
     def forward(self, x):
         x = x.float()
@@ -73,6 +74,7 @@ class MemBrain_model(LightningModule):
         logits = self(x)
         loss = self.loss_fn(logits, y)
         self.log("hp/Val_Loss", loss, on_step=False, on_epoch=True)
+        self.log("Val_Loss", loss, on_step=False, on_epoch=True)
         return loss
 
     def on_validation_epoch_end(self):
@@ -89,7 +91,7 @@ class MemBrain_model(LightningModule):
             ms = MeanShift_clustering(out_star, os.path.join(PROJECT_DIRECTORY, PROJECT_NAME, 'temp_files', 'cluster_centers'))
             try:
                 cluster_star = ms.start_clustering(CLUSTER_BANDWIDTHS[0], recluster_thres=RECLUSTER_THRES[0], recluster_bw=RECLUSTER_BANDWIDTHS[0])
-                ms.evaluate_clustering(cluster_star, PROT_TOKENS, bandwidth=CLUSTER_BANDWIDTHS[0], store_mb_wise=True)
+                ms.evaluate_clustering(cluster_star, PROT_TOKENS, bandwidth=CLUSTER_BANDWIDTHS[0], store_mb_wise=True, distance_thres=15)
                 gt_hits = ms.all_metrics['confusion_matrix'][0][0]
                 gt_misses = ms.all_metrics['confusion_matrix'][0][1]
                 pred_hits = ms.all_metrics['confusion_matrix'][0][2]
@@ -97,13 +99,16 @@ class MemBrain_model(LightningModule):
                 prec = pred_hits / (pred_hits + pred_misses)
                 rec = gt_hits / (gt_hits + gt_misses)
                 f1 = 2 * prec * rec / (prec + rec)
-                self.log("hp/Val_precision", prec, on_epoch=True)
-                self.log("hp/Val_recall", rec, on_epoch=True)
-                self.log("hp/Val_F1", f1, on_epoch=True)
+                if f1 > self.best_f1:
+                    self.log("hp/Val_precision", prec, on_epoch=True)
+                    self.log("hp/Val_recall", rec, on_epoch=True)
+                    self.log("hp/Val_F1", f1, on_epoch=True)
+                    self.log("Val_F1", f1, on_epoch=True)
             except:
                 self.log("hp/Val_precision", -0.1, on_epoch=True)
                 self.log("hp/Val_recall", -0.1, on_epoch=True)
                 self.log("hp/Val_F1", -0.1, on_epoch=True)
+                self.log("Val_F1", -0.1, on_epoch=True)
 
     def on_train_start(self):
         self.logger.log_hyperparams(self.hparams, {'hp/Val_F1': -0.1, 'hp/Val_precision': -0.1, 'hp/Val_recall': -0.1, 'hp/Val_Loss': 15.})
