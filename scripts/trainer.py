@@ -32,10 +32,14 @@ class MemBrainer():
 
 
     def train(self):
-        checkpoint_callback = ModelCheckpoint(monitor='hp/Val_Loss', save_last=True, filename="{epoch}-{Val_Loss:.2f}-{Val_F1:.2f}")
+        checkpoint_callback = ModelCheckpoint(monitor='hp/Val_Loss', save_last=True,
+                                              filename="loss_track_{epoch}-{Val_Loss:.2f}-{Val_F1:.2f}")
+        checkpoint_callback2 = ModelCheckpoint(monitor='Val_F1', save_last=True,
+                                               filename="f1_track_{epoch}-{Val_Loss:.2f}-{Val_F1:.2f}", mode='max')
+        # checkpoint_callback = ModelCheckpoint(monitor='hp/Val_Loss', save_last=True, filename="{epoch}-{Val_Loss:.2f}-{Val_F1:.2f}")
         early_stop_callback = EarlyStopping(monitor='hp/Val_Loss', min_delta=0.0, patience=80, mode='min')
         tb_logger = pl_loggers.TensorBoardLogger(self.ckpt_dir, default_hp_metric=False, name="lightning_logs")
-        trainer = Trainer(max_epochs=self.max_epochs, callbacks=[checkpoint_callback, early_stop_callback], default_root_dir=self.ckpt_dir,
+        trainer = Trainer(max_epochs=self.max_epochs, callbacks=[checkpoint_callback, checkpoint_callback2, early_stop_callback], default_root_dir=self.ckpt_dir,
                           logger=tb_logger, gpus=(1 if USE_GPU else 0))
         trainer.fit(self.model, self.dm)
 

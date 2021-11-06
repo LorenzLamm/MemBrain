@@ -398,9 +398,9 @@ class Rotator(object):
                 particle = volume
             positions_list.append(positions)
             particle_list.append(particle)
-            if self.store_dir is not None:
-                filename = os.path.join(self.store_dir, tomo_token + mb_token + '_' + str(i) + '_centervol.mrc')
-                data_utils.store_tomogram(filename, particle)
+            # if self.store_dir is not None:
+            #     filename = os.path.join(self.store_dir, tomo_token + mb_token + '_' + str(i) + '_centervol.mrc')
+            #     data_utils.store_tomogram(filename, particle)
         if self.store_angles:
             temp_angles = np.stack(angles_list, axis=0)
             all_angles = np.concatenate((all_angles, temp_angles), 0)

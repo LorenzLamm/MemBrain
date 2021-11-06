@@ -112,6 +112,7 @@ class MemBrain_model(LightningModule):
 
     def on_train_start(self):
         self.logger.log_hyperparams(self.hparams, {'hp/Val_F1': -0.1, 'hp/Val_precision': -0.1, 'hp/Val_recall': -0.1, 'hp/Val_Loss': 15.})
+        self.log("Val_F1", -0.1)
 
     def configure_optimizers(self):
         return Adam(self.parameters(), lr=self.lr, weight_decay=WEIGHT_DECAY)

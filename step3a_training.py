@@ -7,6 +7,7 @@ parser.add_argument("--ckpt", type=str, default=None, help="Path to model checkp
 parser.add_argument("--lr", type=float, default=None, help="Learning rate")
 parser.add_argument("--weight_decay", type=float, default=None, help="Weight decay")
 parser.add_argument("--loss_fn", type=str, default=None, help="Which loss function to use? Huber / MSE / L1")
+parser.add_argument("--run_token", type=str, default=None, help="Optional token for multiple parallel runs")
 args = parser.parse_args()
 if args.lr is not None:
     config.LEARNING_RATE = args.lr
@@ -15,6 +16,8 @@ if args.weight_decay is not None:
 if args.loss_fn is not None:
     assert args.loss_fn in ['MSE', 'Huber', 'L1']
     config.LOSS_FN = args.loss_fn
+if args.run_token is not None:
+    config.RUN_TOKEN = args.run_token
 
 from scripts.data_loading import MemBrain_datamodule
 from scripts.trainer import MemBrainer

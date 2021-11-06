@@ -10,6 +10,7 @@ from utils.parameters import ParameterSettings
 from scripts.add_labels_and_distances import read_GT_data_membranorama_xml
 from utils.evaluation_metrics import chamfer_distance, confusion_matrix, confusion_matrices_for_thresholds
 from time import time
+from config import *
 
 class MeanShift_clustering(object):
     def __init__(self, star_file, out_dir, detection_by_classification=False):
@@ -328,6 +329,8 @@ def store_cluster_centers(score_file, out_dir, cluster_centers, bandwidth, out_s
     csv_stem = os.path.basename(score_file)
     if out_stem is not None:
         csv_stem = out_stem + '_bw' + str(bandwidth) + '_' + csv_stem
+    if RUN_TOKEN is not None:
+        csv_stem = csv_stem[:-4] + "_" + RUN_TOKEN + ".csv"
     out_path = os.path.join(out_dir, csv_stem)
     with open(out_path, 'w') as out_file:
         csv_writer = csv.writer(out_file, delimiter=out_del)
